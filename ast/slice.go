@@ -12,9 +12,9 @@ type Slice struct {
 }
 
 func (se *Slice) Eval(env *environment.Environment) object.Object {
-	var res []object.Object
+	var res []any
 	for _, v := range se.Data {
-		res = append(res, v.Eval(env))
+		res = append(res, v.Eval(env).GetValue())
 	}
 	return &object.Slice{Val: res}
 }

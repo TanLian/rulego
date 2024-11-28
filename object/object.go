@@ -56,7 +56,7 @@ func ToObject(value reflect.Value) Object {
 	case reflect.Bool:
 		return &Bool{Val: value.Bool()}
 	case reflect.Slice, reflect.Array:
-		slice := make([]Object, value.Len())
+		slice := make([]any, value.Len())
 		for i := 0; i < value.Len(); i++ {
 			slice[i] = ToObject(value.Index(i))
 		}

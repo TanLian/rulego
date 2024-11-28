@@ -50,7 +50,7 @@ func (as *Assign) Exec(env *environment.Environment) (object.Object, bool, bool)
 			m.Val[key] = as.Right.Eval(env)
 		}
 		if s, ok := data.(*object.Slice); ok {
-			s.Val[int(key.(float64))] = as.Right.Eval(env)
+			s.Val[int(key.(float64))] = as.Right.Eval(env).GetValue()
 		}
 		return object.Null, false, false
 	}

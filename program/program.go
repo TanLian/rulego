@@ -10,7 +10,7 @@ type Program struct {
 	env *environment.Environment
 }
 
-func NewProgram() *Program {
+func New() *Program {
 	return &Program{env: environment.Root}
 }
 

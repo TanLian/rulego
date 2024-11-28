@@ -32,7 +32,7 @@ func (idx *Index) Eval(env *environment.Environment) object.Object {
 		if index, ok := key.(float64); !ok {
 			panic("invalid index expression")
 		} else {
-			return s.Val[int(index)]
+			return object.New(s.Val[int(index)])
 		}
 	}
 

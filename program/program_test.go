@@ -48,8 +48,15 @@ fn construct2DArray(original, m, n) {
 println(construct2DArray([1,2,3,4], 2, 2));
 `
 
+var input3 = `
+arr = [1,2];
+if arr[1] > arr[0] {
+	println("ok");
+}
+`
+
 func TestProgram_Run(t *testing.T) {
-	p := NewProgram()
+	p := New()
 	p.Run(testSwitch)
 }
 
@@ -126,5 +133,11 @@ default:
 	println("dddd");
 	a += 5;
 }
+println(a);
+`
+
+var testInlineComments = `
+a = []; 
+// a.Push(1);
 println(a);
 `

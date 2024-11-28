@@ -14,7 +14,7 @@ func Start() {
 
 	fmt.Println("Go REPL")
 	fmt.Println("Type 'exit' to quit")
-	pro := program.NewProgram()
+	pro := program.New()
 
 	for {
 		fmt.Print(">> ")

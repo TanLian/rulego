@@ -42,7 +42,7 @@ var BuiltInFn = map[string]*FuncBuiltin{
 		if !ok {
 			return object.Null
 		}
-		res := &object.Slice{Val: append([]object.Object(nil), arr.Val...)}
+		res := &object.Slice{Val: append([]any(nil), arr.Val...)}
 		for i := 1; i < len(a); i++ {
 			res.Val = append(res.Val, a[i])
 		}

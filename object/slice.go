@@ -1,7 +1,7 @@
 package object
 
 type Slice struct {
-	Val []Object
+	Val []any
 }
 
 func (s *Slice) object() {}
@@ -16,12 +16,12 @@ func (s *Slice) GetValue() any {
 		if v == Null || v == nil {
 			continue
 		}
-		res = append(res, v.GetValue())
+		res = append(res, v)
 	}
 	return res
 }
 
-func (s *Slice) Push(item Object) {
+func (s *Slice) Push(item any) {
 	s.Val = append(s.Val, item)
 }
 

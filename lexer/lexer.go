@@ -56,7 +56,7 @@ func (l *Lexer) ReadNextToken() token.Token {
 			for l.currentChar() != '\n' {
 				l.position++
 			}
-			return l.ReadNextToken()
+			return token.Token{Type: token.INLINE_COMMENTS, Value: "//"}
 		}
 		return token.Token{
 			Type:  token.DIVIDE,

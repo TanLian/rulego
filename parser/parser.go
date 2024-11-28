@@ -589,9 +589,10 @@ func (p *Parser) parseDot(left ast.Expression) ast.Expression {
 func (p *Parser) forward() {
 	p.currentToken = p.peekToken
 	p.peekToken = p.l.ReadNextToken()
-	//if p.expectToken(token.INLINE_COMMENTS) {
-	//	p.forward()
-	//}
+	if p.expectToken(token.INLINE_COMMENTS) {
+		p.forward()
+		return
+	}
 	//fmt.Println("curr: ", p.currentToken, " peek: ", p.peekToken)
 }
 

@@ -156,7 +156,7 @@ fmt.Println(NewRule(input).Execute(env)) // it will print "You are an adult."
 ```
 
 # 多规则
-上面的规则一次性只能解析单个规则，本小节就是突破这个限制，使得一次性可以解析多个规则。
+上面的规则一次性只能解析单个规则，本小节描述如何一次解析多个规则。
 
 ## 定义多个规则
 ```go

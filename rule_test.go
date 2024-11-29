@@ -60,7 +60,43 @@ func TestNewRule(t *testing.T) {
 	env.Inject("User", user)
 	fmt.Println(NewRule(input).Execute(env))
 	fmt.Println(user)
+}
 
+func TestRuleMap(t *testing.T) {
+	input := `
+rule rule_map
+{
+	// 过滤掉age小于18 或者 gender不是男的数据
+	if data["age"] < 18 || data["gender"] != "男" {
+		println("age less than 18 or gender not 男");
+		return 0;
+	}
+
+	// 对手机号进行脱敏处理
+	data["tel"] = fuzzyTel(data["tel"]);
+
+	// 补全id
+	data["id"] = 10000;
+}
+`
+	data := map[string]any{
+		"age":    18,
+		"gender": "男",
+		"tel":    "13011110000",
+	}
+	var fuzzyTel = func(tel string) string {
+		if len(tel) != 11 {
+			return tel
+		}
+		return tel[:7] + "****"
+	}
+	// 注入数据
+	env := environment.New(environment.Root)
+	env.Inject("data", &data)
+	env.Inject("fuzzyTel", fuzzyTel)
+	// 生成并执行规则
+	NewRule(input).Execute(env)
+	fmt.Println("data: ", data)
 }
 
 func TestRuleBatch(t *testing.T) {

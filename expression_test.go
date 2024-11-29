@@ -9,6 +9,12 @@ import (
 	"github.com/tanlian/rulego/environment"
 )
 
+func TestNewExpression1(t *testing.T) {
+	expr := NewExpression("a + b")
+	t.Log(expr.Eval(map[string]any{"a": 1, "b": 2})) // result is 3
+	t.Log(expr.Eval(map[string]any{"a": 3, "b": 2})) // result is 5
+}
+
 func TestNewExpression(t *testing.T) {
 	env := environment.New(environment.Root)
 

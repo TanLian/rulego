@@ -17,6 +17,7 @@ const (
 	TypeString
 	TypeRune
 	TypeStruct
+	TypeMapPointer
 )
 
 type Object interface {
@@ -79,10 +80,15 @@ func ToObject(value reflect.Value) Object {
 				methodToArgType: make(map[string][]reflect.Type),
 			}
 		}
+		if value.Elem().Kind() == reflect.Map {
+			return &MapPointer{Value: value.Elem()}
+		}
 		return ToObject(value.Elem())
 	case reflect.Func:
 		return &Fn{Value: value}
-	// 这里可以根据需要添加更多类型处理逻辑
+	case reflect.Interface:
+		return ToObject(value.Elem())
+		// TODO: 这里可以根据需要添加更多类型处理逻辑
 	default:
 		return Null
 	}

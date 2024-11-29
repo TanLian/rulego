@@ -52,6 +52,9 @@ func (as *Assign) Exec(env *environment.Environment) (object.Object, bool, bool)
 		if s, ok := data.(*object.Slice); ok {
 			s.Val[int(key.(float64))] = as.Right.Eval(env).GetValue()
 		}
+		if m, ok := data.(*object.MapPointer); ok {
+			m.SetField(key, as.Right.Eval(env).GetValue())
+		}
 		return object.Null, false, false
 	}
 

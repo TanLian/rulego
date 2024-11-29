@@ -15,7 +15,8 @@ type Compare struct {
 }
 
 func (c *Compare) Eval(env *environment.Environment) object.Object {
-	if leftInt, ok := c.Left.Eval(env).(*object.Int); ok {
+	leftObj := c.Left.Eval(env)
+	if leftInt, ok := leftObj.(*object.Int); ok {
 		if rightInt, ok := c.Right.Eval(env).(*object.Int); ok {
 			return &object.Bool{Val: compare(leftInt.Val, rightInt.Val, c.Token.Type)}
 		}
@@ -25,7 +26,7 @@ func (c *Compare) Eval(env *environment.Environment) object.Object {
 		panic("invalid compare expression")
 	}
 
-	if leftFloat, ok := c.Left.Eval(env).(*object.Float); ok {
+	if leftFloat, ok := leftObj.(*object.Float); ok {
 		if rightInt, ok := c.Right.Eval(env).(*object.Int); ok {
 			return &object.Bool{Val: compare(leftFloat.Val, float64(rightInt.Val), c.Token.Type)}
 		}
@@ -35,7 +36,7 @@ func (c *Compare) Eval(env *environment.Environment) object.Object {
 		panic("invalid compare expression")
 	}
 
-	if leftStr, ok := c.Left.Eval(env).(*object.String); ok {
+	if leftStr, ok := leftObj.(*object.String); ok {
 		if rightStr, ok := c.Right.Eval(env).(*object.String); ok {
 			return &object.Bool{Val: compare(string(leftStr.Val), string(rightStr.Val), c.Token.Type)}
 		}
@@ -45,7 +46,7 @@ func (c *Compare) Eval(env *environment.Environment) object.Object {
 		panic("invalid compare expression")
 	}
 
-	if leftRune, ok := c.Left.Eval(env).(*object.Rune); ok {
+	if leftRune, ok := leftObj.(*object.Rune); ok {
 		if rightRune, ok := c.Right.Eval(env).(*object.Rune); ok {
 			return &object.Bool{Val: compare(leftRune.Val, rightRune.Val, c.Token.Type)}
 		}

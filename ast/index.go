@@ -19,6 +19,11 @@ func (idx *Index) Eval(env *environment.Environment) object.Object {
 	if m, ok := data.(*object.Map); ok {
 		return m.Val[key]
 	}
+
+	if m, ok := data.(*object.MapPointer); ok {
+		return object.New(m.GetField(key))
+	}
+
 	if s, ok := data.(*object.Slice); ok {
 		if idx.End != nil {
 			start, okStart := idx.Key.Eval(env).GetValue().(float64)

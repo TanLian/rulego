@@ -18,6 +18,16 @@ func NewExpression(input string) *Expression {
 	return &Expression{exp: p.ParseExpression(token.PrecedenceLowest)}
 }
 
-func (exp *Expression) Eval(env *environment.Environment) any {
-	return exp.exp.Eval(env).GetValue()
+func (exp *Expression) Eval(data any) any {
+	if env, ok := data.(*environment.Environment); ok {
+		return exp.exp.Eval(env).GetValue()
+	}
+	if kv, ok := data.(map[string]any); ok {
+		env := environment.New(environment.Root)
+		for k, v := range kv {
+			env.Inject(k, v)
+		}
+		return exp.exp.Eval(env).GetValue()
+	}
+	return nil
 }

@@ -22,6 +22,9 @@ func (p *Minus) Eval(env *environment.Environment) object.Object {
 		if rightObj, ok := right.(*object.Float); ok {
 			return &object.Float{Val: float64(leftObj.Val) - rightObj.Val}
 		}
+		if right.Type() == object.TypeUndefined {
+			return &object.Int{Val: leftObj.Val}
+		}
 		panic("invalid minus expression")
 	}
 
@@ -32,7 +35,19 @@ func (p *Minus) Eval(env *environment.Environment) object.Object {
 		if rightObj, ok := right.(*object.Float); ok {
 			return &object.Float{Val: leftObj.Val - rightObj.Val}
 		}
+		if right.Type() == object.TypeUndefined {
+			return &object.Float{Val: leftObj.Val}
+		}
 		panic("invalid minus expression")
+	}
+
+	if left.Type() == object.TypeUndefined {
+		if rightObj, ok := right.(*object.Int); ok {
+			return &object.Int{Val: -rightObj.Val}
+		}
+		if rightObj, ok := right.(*object.Float); ok {
+			return &object.Float{Val: -rightObj.Val}
+		}
 	}
 	panic("invalid minus expression")
 }

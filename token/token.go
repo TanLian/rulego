@@ -57,8 +57,11 @@ const (
 	OR   // ||
 	BANG // !
 
-	PLUS_ASSIGN // +=
-	PLUS_PLUS   // ++
+	PLUS_ASSIGN   // +=
+	PLUS_PLUS     // ++
+	MINUS_ASSIGN  // -=
+	TIMES_ASSIGN  // *=
+	DIVIDE_ASSIGN // /=
 
 	INLINE_COMMENTS
 
@@ -114,6 +117,9 @@ func (t Token) String() string {
 		OR:              "or",
 		PLUS_ASSIGN:     "plus_assign",
 		PLUS_PLUS:       "plus_plus",
+		MINUS_ASSIGN:    "minus_assign",
+		TIMES_ASSIGN:    "times_assign",
+		DIVIDE_ASSIGN:   "divide_assign",
 		INLINE_COMMENTS: "//",
 		EOF:             "eof",
 	}

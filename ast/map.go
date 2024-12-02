@@ -13,9 +13,9 @@ type Map struct {
 }
 
 func (m *Map) Eval(env *environment.Environment) object.Object {
-	res := make(map[any]object.Object)
+	res := make(map[any]any)
 	for k, v := range m.KV {
-		res[k.Eval(env).GetValue()] = v.Eval(env)
+		res[k.Eval(env).GetValue()] = v.Eval(env).GetValue()
 	}
 	return &object.Map{Val: res}
 }

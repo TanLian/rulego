@@ -41,11 +41,19 @@ func (l *Lexer) ReadNextToken() token.Token {
 			Value: "+",
 		}
 	case '-':
+		if l.peekChar() == '=' {
+			l.position++
+			return token.Token{Type: token.MINUS_ASSIGN, Value: "+="}
+		}
 		return token.Token{
 			Type:  token.MINUS,
 			Value: "-",
 		}
 	case '*':
+		if l.peekChar() == '=' {
+			l.position++
+			return token.Token{Type: token.TIMES_ASSIGN, Value: "+="}
+		}
 		return token.Token{
 			Type:  token.TIMES,
 			Value: "*",
@@ -57,6 +65,10 @@ func (l *Lexer) ReadNextToken() token.Token {
 				l.position++
 			}
 			return token.Token{Type: token.INLINE_COMMENTS, Value: "//"}
+		}
+		if l.peekChar() == '=' {
+			l.position++
+			return token.Token{Type: token.DIVIDE_ASSIGN, Value: "+="}
 		}
 		return token.Token{
 			Type:  token.DIVIDE,

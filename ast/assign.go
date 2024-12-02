@@ -47,7 +47,7 @@ func (as *Assign) Exec(env *environment.Environment) (object.Object, bool, bool)
 		data := idx.Data.Eval(env)
 		key := idx.Key.Eval(env).GetValue()
 		if m, ok := data.(*object.Map); ok {
-			m.Val[key] = as.Right.Eval(env)
+			m.Val[key] = as.Right.Eval(env).GetValue()
 		}
 		if s, ok := data.(*object.Slice); ok {
 			s.Val[int(key.(float64))] = as.Right.Eval(env).GetValue()

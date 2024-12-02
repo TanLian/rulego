@@ -64,6 +64,9 @@ func NewParser(l *lexer.Lexer, env *environment.Environment) *Parser {
 	p.registerInfixFn(token.LESS_EQUAL, p.parseCompare)
 	p.registerInfixFn(token.NOT_EQUAL, p.parseCompare)
 	p.registerInfixFn(token.PLUS_ASSIGN, p.parsePlusAssign)
+	p.registerInfixFn(token.MINUS_ASSIGN, p.parseMinusAssign)
+	p.registerInfixFn(token.TIMES_ASSIGN, p.parseTimesAssign)
+	p.registerInfixFn(token.DIVIDE_ASSIGN, p.parseDivideAssign)
 	p.registerInfixFn(token.PLUS_PLUS, p.parsePlusPlus)
 	p.registerInfixFn(token.AND, p.parseAnd)
 	p.registerInfixFn(token.OR, p.parseOr)
@@ -548,6 +551,27 @@ func (p *Parser) parseCompare(left ast.Expression) ast.Expression {
 func (p *Parser) parsePlusAssign(left ast.Expression) ast.Expression {
 	res := &ast.PlusAssign{Left: left}
 	p.forward() // 跳过 +=
+	res.Right = p.ParseExpression(token.PrecedenceLowest)
+	return res
+}
+
+func (p *Parser) parseMinusAssign(left ast.Expression) ast.Expression {
+	res := &ast.MinusAssign{Left: left}
+	p.forward() // 跳过 -=
+	res.Right = p.ParseExpression(token.PrecedenceLowest)
+	return res
+}
+
+func (p *Parser) parseTimesAssign(left ast.Expression) ast.Expression {
+	res := &ast.TimesAssign{Left: left}
+	p.forward() // 跳过 *=
+	res.Right = p.ParseExpression(token.PrecedenceLowest)
+	return res
+}
+
+func (p *Parser) parseDivideAssign(left ast.Expression) ast.Expression {
+	res := &ast.DivideAssign{Left: left}
+	p.forward() // 跳过 /=
 	res.Right = p.ParseExpression(token.PrecedenceLowest)
 	return res
 }

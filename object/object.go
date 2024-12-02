@@ -59,14 +59,13 @@ func ToObject(value reflect.Value) Object {
 	case reflect.Slice, reflect.Array:
 		slice := make([]any, value.Len())
 		for i := 0; i < value.Len(); i++ {
-			// slice[i] = ToObject(value.Index(i)) // TODO: 用哪个
 			slice[i] = value.Index(i).Interface()
 		}
 		return &Slice{Val: slice}
 	case reflect.Map:
-		m := make(map[any]Object)
+		m := make(map[any]any)
 		for _, k := range value.MapKeys() {
-			m[k.Interface()] = ToObject(value.MapIndex(k))
+			m[k.Interface()] = value.MapIndex(k).Interface()
 		}
 		return &Map{Val: m}
 	case reflect.Struct:

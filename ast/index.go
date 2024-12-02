@@ -17,7 +17,7 @@ func (idx *Index) Eval(env *environment.Environment) object.Object {
 	data := idx.Data.Eval(env)
 	key := idx.Key.Eval(env).GetValue()
 	if m, ok := data.(*object.Map); ok {
-		return m.Val[key]
+		return object.New(m.Val[key])
 	}
 
 	if m, ok := data.(*object.MapPointer); ok {

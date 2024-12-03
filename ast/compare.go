@@ -5,11 +5,22 @@ import (
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
-	"github.com/tanlian/rulego/token"
+)
+
+type CompareFlag uint8
+
+const (
+	_                   CompareFlag = iota
+	CompareGreaterThan              // >
+	CompareGreaterEqual             // >=
+	CompareEqual                    // ==
+	CompareNotEqual                 // ==
+	CompareLessThan                 // <
+	CompareLessEqual                // <=
 )
 
 type Compare struct {
-	Token token.Token
+	Flag  CompareFlag
 	Left  Expression
 	Right Expression
 }
@@ -18,40 +29,40 @@ func (c *Compare) Eval(env *environment.Environment) object.Object {
 	leftObj := c.Left.Eval(env)
 	if leftInt, ok := leftObj.(*object.Int); ok {
 		if rightInt, ok := c.Right.Eval(env).(*object.Int); ok {
-			return &object.Bool{Val: compare(leftInt.Val, rightInt.Val, c.Token.Type)}
+			return &object.Bool{Val: compare(leftInt.Val, rightInt.Val, c.Flag)}
 		}
 		if rightFloat, ok := c.Right.Eval(env).(*object.Float); ok {
-			return &object.Bool{Val: compare(float64(leftInt.Val), rightFloat.Val, c.Token.Type)}
+			return &object.Bool{Val: compare(float64(leftInt.Val), rightFloat.Val, c.Flag)}
 		}
 		panic("invalid compare expression")
 	}
 
 	if leftFloat, ok := leftObj.(*object.Float); ok {
 		if rightInt, ok := c.Right.Eval(env).(*object.Int); ok {
-			return &object.Bool{Val: compare(leftFloat.Val, float64(rightInt.Val), c.Token.Type)}
+			return &object.Bool{Val: compare(leftFloat.Val, float64(rightInt.Val), c.Flag)}
 		}
 		if rightFloat, ok := c.Right.Eval(env).(*object.Float); ok {
-			return &object.Bool{Val: compare(leftFloat.Val, rightFloat.Val, c.Token.Type)}
+			return &object.Bool{Val: compare(leftFloat.Val, rightFloat.Val, c.Flag)}
 		}
 		panic("invalid compare expression")
 	}
 
 	if leftStr, ok := leftObj.(*object.String); ok {
 		if rightStr, ok := c.Right.Eval(env).(*object.String); ok {
-			return &object.Bool{Val: compare(string(leftStr.Val), string(rightStr.Val), c.Token.Type)}
+			return &object.Bool{Val: compare(string(leftStr.Val), string(rightStr.Val), c.Flag)}
 		}
 		if rightRune, ok := c.Right.Eval(env).(*object.Rune); ok {
-			return &object.Bool{Val: compare(string(leftStr.Val), string(rightRune.Val), c.Token.Type)}
+			return &object.Bool{Val: compare(string(leftStr.Val), string(rightRune.Val), c.Flag)}
 		}
 		panic("invalid compare expression")
 	}
 
 	if leftRune, ok := leftObj.(*object.Rune); ok {
 		if rightRune, ok := c.Right.Eval(env).(*object.Rune); ok {
-			return &object.Bool{Val: compare(leftRune.Val, rightRune.Val, c.Token.Type)}
+			return &object.Bool{Val: compare(leftRune.Val, rightRune.Val, c.Flag)}
 		}
 		if rightStr, ok := c.Right.Eval(env).(*object.String); ok {
-			return &object.Bool{Val: compare(string(leftRune.Val), string(rightStr.Val), c.Token.Type)}
+			return &object.Bool{Val: compare(string(leftRune.Val), string(rightStr.Val), c.Flag)}
 		}
 		panic("invalid compare expression")
 	}
@@ -59,18 +70,18 @@ func (c *Compare) Eval(env *environment.Environment) object.Object {
 }
 
 func (c *Compare) String() string {
-	switch c.Token.Type {
-	case token.GREATER:
+	switch c.Flag {
+	case CompareGreaterThan:
 		return fmt.Sprintf("%s > %s", c.Left.String(), c.Right.String())
-	case token.GREATER_EQUAL:
+	case CompareGreaterEqual:
 		return fmt.Sprintf("%s >= %s", c.Left.String(), c.Right.String())
-	case token.EQUAL:
+	case CompareEqual:
 		return fmt.Sprintf("%s == %s", c.Left.String(), c.Right.String())
-	case token.LESS:
+	case CompareLessThan:
 		return fmt.Sprintf("%s < %s", c.Left.String(), c.Right.String())
-	case token.LESS_EQUAL:
+	case CompareLessEqual:
 		return fmt.Sprintf("%s <= %s", c.Left.String(), c.Right.String())
-	case token.NOT_EQUAL:
+	case CompareNotEqual:
 		return fmt.Sprintf("%s != %s", c.Left.String(), c.Right.String())
 	default:
 		return ""
@@ -79,26 +90,26 @@ func (c *Compare) String() string {
 
 func (c *Compare) expressionNode() {}
 
-// 定义一个类型约束，要求类型必须实现有序比较
+// Ordered 定义一个类型约束，要求类型必须实现有序比较
 type Ordered interface {
 	int | int8 | int16 | int32 | int64 |
 		uint | uint8 | uint16 | uint32 | uint64 |
 		float32 | float64 | string
 }
 
-func compare[T Ordered](a, b T, tokenType token.TokenType) bool {
-	switch tokenType {
-	case token.GREATER:
+func compare[T Ordered](a, b T, flg CompareFlag) bool {
+	switch flg {
+	case CompareGreaterThan:
 		return a > b
-	case token.GREATER_EQUAL:
+	case CompareGreaterEqual:
 		return a >= b
-	case token.EQUAL:
+	case CompareEqual:
 		return a == b
-	case token.LESS:
+	case CompareLessThan:
 		return a < b
-	case token.LESS_EQUAL:
+	case CompareLessEqual:
 		return a <= b
-	case token.NOT_EQUAL:
+	case CompareNotEqual:
 		return a != b
 	default:
 		return false

@@ -12,7 +12,7 @@ import (
 func Start() {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("Go REPL")
+	fmt.Println("RuleGo REPL")
 	fmt.Println("Type 'exit' to quit")
 	pro := program.New()
 

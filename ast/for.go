@@ -27,23 +27,26 @@ func (f *For) Eval(env *environment.Environment) object.Object {
 	return object.Null
 }
 
-func (f *For) Exec(env *environment.Environment) (object.Object, bool, bool) {
+func (f *For) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 	childEnv := environment.New(env)
 	f.Initial.Exec(childEnv)
 	for object.TransToBool(f.Condition.Eval(childEnv)) {
 		for _, v := range f.Statements {
-			obj, ret, brk := v.Exec(childEnv)
-			if ret {
-				return obj, ret, false
+			obj, flg := v.Exec(childEnv)
+			if flg&RETURN != 0 {
+				return obj, flg
 			}
-			if brk {
+			if flg&BREAK != 0 {
 				goto end
+			}
+			if flg&CONTINUE != 0 {
+				break
 			}
 		}
 		f.Post.Exec(childEnv)
 	}
 end:
-	return object.Null, false, false
+	return object.Null, 0
 }
 
 func (f *For) String() string {

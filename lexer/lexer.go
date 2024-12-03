@@ -28,32 +28,16 @@ func (l *Lexer) ReadNextToken() token.Token {
 	ch := l.currentChar()
 	switch ch {
 	case '+':
-		if l.peekChar() == '=' {
-			l.position++
-			return token.Token{Type: token.PLUS_ASSIGN, Value: "+="}
-		}
-		if l.peekChar() == '+' {
-			l.position++
-			return token.Token{Type: token.PLUS_PLUS, Value: "++"}
-		}
 		return token.Token{
 			Type:  token.PLUS,
 			Value: "+",
 		}
 	case '-':
-		if l.peekChar() == '=' {
-			l.position++
-			return token.Token{Type: token.MINUS_ASSIGN, Value: "+="}
-		}
 		return token.Token{
 			Type:  token.MINUS,
 			Value: "-",
 		}
 	case '*':
-		if l.peekChar() == '=' {
-			l.position++
-			return token.Token{Type: token.TIMES_ASSIGN, Value: "+="}
-		}
 		return token.Token{
 			Type:  token.TIMES,
 			Value: "*",
@@ -66,19 +50,12 @@ func (l *Lexer) ReadNextToken() token.Token {
 			}
 			return token.Token{Type: token.INLINE_COMMENTS, Value: "//"}
 		}
-		if l.peekChar() == '=' {
-			l.position++
-			return token.Token{Type: token.DIVIDE_ASSIGN, Value: "+="}
-		}
+
 		return token.Token{
 			Type:  token.DIVIDE,
 			Value: "/",
 		}
 	case '!':
-		if l.peekChar() == '=' {
-			l.position++
-			return token.Token{Type: token.NOT_EQUAL, Value: "!="}
-		}
 		return token.Token{
 			Type:  token.BANG,
 			Value: "!",
@@ -89,17 +66,9 @@ func (l *Lexer) ReadNextToken() token.Token {
 			Value: "%",
 		}
 	case '&':
-		if l.position+1 < len(l.input) && l.input[l.position+1] == '&' {
-			l.position++
-			return token.Token{Type: token.AND, Value: "&&"}
-		}
-		return token.InvalidToken // TODO
+		return token.Token{Type: token.AND, Value: "&"}
 	case '|':
-		if l.position+1 < len(l.input) && l.input[l.position+1] == '|' {
-			l.position++
-			return token.Token{Type: token.OR, Value: "||"}
-		}
-		return token.InvalidToken // TODO
+		return token.Token{Type: token.OR, Value: "|"}
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 		return l.eatNumber()
 	case '(':
@@ -115,10 +84,6 @@ func (l *Lexer) ReadNextToken() token.Token {
 	case '}':
 		return token.Token{Type: token.RBRACE, Value: "}"}
 	case '=':
-		if l.peekChar() == '=' {
-			l.position++
-			return token.Token{Type: token.EQUAL, Value: "=="}
-		}
 		return token.Token{Type: token.ASSIGN, Value: "="}
 	case ';':
 		return token.Token{Type: token.SEMICOLON, Value: ";"}
@@ -133,16 +98,8 @@ func (l *Lexer) ReadNextToken() token.Token {
 	case '\'':
 		return l.eatString('\'')
 	case '>':
-		if l.peekChar() == '=' {
-			l.position++
-			return token.Token{Type: token.GREATER_EQUAL, Value: ">="}
-		}
 		return token.Token{Type: token.GREATER, Value: ">"}
 	case '<':
-		if l.peekChar() == '=' {
-			l.position++
-			return token.Token{Type: token.LESS_EQUAL, Value: "<="}
-		}
 		return token.Token{Type: token.LESS, Value: "<"}
 	default:
 		if util.IsAlphabet(ch) {
@@ -217,6 +174,8 @@ func (l *Lexer) eatIdent() token.Token {
 		return token.Token{Type: token.FOR, Value: str}
 	case "break":
 		return token.Token{Type: token.BREAK, Value: str}
+	case "continue":
+		return token.Token{Type: token.CONTINUE, Value: str}
 	case "switch":
 		return token.Token{Type: token.SWITCH, Value: str}
 	case "case":

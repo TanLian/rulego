@@ -8,11 +8,29 @@ import (
 )
 
 type Slice struct {
-	Data []Expression
+	Data     []Expression
+	InitExpr Expression
+	LenExpr  Expression
 }
 
 func (se *Slice) Eval(env *environment.Environment) object.Object {
 	var res []any
+	if se.InitExpr != nil && se.LenExpr != nil {
+		lenObj := se.LenExpr.Eval(env)
+		if lenFloat, ok := lenObj.(*object.Float); ok {
+			for i := int64(0); i < int64(lenFloat.Val); i++ {
+				res = append(res, se.InitExpr.Eval(env).GetValue())
+			}
+			return &object.Slice{Val: res}
+		}
+		if lenInt, ok := lenObj.(*object.Int); ok {
+			for i := int64(0); i < lenInt.Val; i++ {
+				res = append(res, se.InitExpr.Eval(env).GetValue())
+			}
+			return &object.Slice{Val: res}
+		}
+		panic("invalid slice")
+	}
 	for _, v := range se.Data {
 		res = append(res, v.Eval(env).GetValue())
 	}

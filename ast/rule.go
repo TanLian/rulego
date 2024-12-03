@@ -23,7 +23,7 @@ func (rl *Rule) Eval(env *environment.Environment) object.Object {
 
 func (rl *Rule) Call(env *environment.Environment) object.Object {
 	for _, v := range rl.Statements {
-		if obj, ret, _ := v.Exec(env); ret {
+		if obj, flg := v.Exec(env); flg&RETURN != 0 {
 			return obj
 		}
 	}

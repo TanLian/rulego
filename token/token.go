@@ -33,35 +33,26 @@ const (
 	COLON     // :
 	MOD       // %
 
-	GREATER       // >
-	LESS          // <
-	GREATER_EQUAL // >=
-	LESS_EQUAL    // <=
-	EQUAL         // ==
-	NOT_EQUAL     // !=
+	GREATER // >
+	LESS    // <
 
 	IDENTIFIER
-	ASSIGN
+	ASSIGN // =
 	IF
 	ELSE
 	FUNC
 	RETURN
 	FOR
 	BREAK
+	CONTINUE
 	SWITCH
 	CASE
 	DEFAULT
 	RULE
 
-	AND  // &&
-	OR   // ||
+	AND  // &
+	OR   // |
 	BANG // !
-
-	PLUS_ASSIGN   // +=
-	PLUS_PLUS     // ++
-	MINUS_ASSIGN  // -=
-	TIMES_ASSIGN  // *=
-	DIVIDE_ASSIGN // /=
 
 	INLINE_COMMENTS
 
@@ -100,10 +91,6 @@ func (t Token) String() string {
 		ASSIGN:          "assign",
 		GREATER:         "greater",
 		LESS:            "less",
-		GREATER_EQUAL:   "greater than",
-		LESS_EQUAL:      "less than",
-		EQUAL:           "equal",
-		NOT_EQUAL:       "not equal",
 		IF:              "if",
 		ELSE:            "else",
 		SWITCH:          "switch",
@@ -113,13 +100,9 @@ func (t Token) String() string {
 		RULE:            "rule",
 		RETURN:          "return",
 		BREAK:           "break",
-		AND:             "and",
-		OR:              "or",
-		PLUS_ASSIGN:     "plus_assign",
-		PLUS_PLUS:       "plus_plus",
-		MINUS_ASSIGN:    "minus_assign",
-		TIMES_ASSIGN:    "times_assign",
-		DIVIDE_ASSIGN:   "divide_assign",
+		CONTINUE:        "continue",
+		AND:             "&",
+		OR:              "|",
 		INLINE_COMMENTS: "//",
 		EOF:             "eof",
 	}

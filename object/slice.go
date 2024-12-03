@@ -11,14 +11,7 @@ func (s *Slice) Type() Type {
 }
 
 func (s *Slice) GetValue() any {
-	var res []any
-	for _, v := range s.Val {
-		if v == Null || v == nil {
-			continue
-		}
-		res = append(res, v)
-	}
-	return res
+	return s.Val
 }
 
 func (s *Slice) Push(item any) {

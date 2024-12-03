@@ -36,11 +36,11 @@ type Assign struct {
 	Right Expression
 }
 
-func (as *Assign) Exec(env *environment.Environment) (object.Object, bool, bool) {
+func (as *Assign) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 	if ident, ok := as.Left.(*Ident); ok {
 		// fmt.Println("assign to ", ident.Token.Value, " val: ", as.Right.String())
 		env.Set(ident.Token.Value, as.Right.Eval(env))
-		return object.Null, false, false
+		return object.Null, 0
 	}
 
 	if idx, ok := as.Left.(*Index); ok {
@@ -50,12 +50,12 @@ func (as *Assign) Exec(env *environment.Environment) (object.Object, bool, bool)
 			m.Val[key] = as.Right.Eval(env).GetValue()
 		}
 		if s, ok := data.(*object.Slice); ok {
-			s.Val[int(key.(float64))] = as.Right.Eval(env).GetValue()
+			s.Val[int(key.(int64))] = as.Right.Eval(env).GetValue()
 		}
 		if m, ok := data.(*object.MapPointer); ok {
 			m.SetField(key, as.Right.Eval(env).GetValue())
 		}
-		return object.Null, false, false
+		return object.Null, 0
 	}
 
 	if dot, ok := as.Left.(*Dot); ok {
@@ -65,9 +65,14 @@ func (as *Assign) Exec(env *environment.Environment) (object.Object, bool, bool)
 				s.SetField(dotRight.Token.Value, as.Right.Eval(env).GetValue())
 			}
 		}
-		return object.Null, false, false
+		return object.Null, 0
 	}
 	panic("invalid assign statement")
+}
+
+func (as *Assign) Eval(env *environment.Environment) object.Object {
+	res, _ := as.Exec(env)
+	return res
 }
 
 func (as *Assign) String() string {
@@ -75,3 +80,5 @@ func (as *Assign) String() string {
 }
 
 func (as *Assign) statementNode() {}
+
+func (as *Assign) expressionNode() {}

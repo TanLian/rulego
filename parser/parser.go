@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/tanlian/rulego/ast"
 	"github.com/tanlian/rulego/environment"
@@ -50,6 +51,9 @@ func NewParser(l *lexer.Lexer, env *environment.Environment) *Parser {
 	p.registerPrefixFn(token.IF, p.parseIf)
 	p.registerPrefixFn(token.FOR, p.parseFor)
 	p.registerPrefixFn(token.SWITCH, p.parseSwitch)
+	p.registerPrefixFn(token.RETURN, p.parseReturn)
+	p.registerPrefixFn(token.BREAK, p.parseBreak)
+	p.registerPrefixFn(token.CONTINUE, p.parseContinue)
 
 	p.registerInfixFn(token.PLUS, p.parsePlus)
 	p.registerInfixFn(token.MINUS, p.parseMinus)
@@ -57,21 +61,14 @@ func NewParser(l *lexer.Lexer, env *environment.Environment) *Parser {
 	p.registerInfixFn(token.DIVIDE, p.parseDivide)
 	p.registerInfixFn(token.LPAREN, p.parseCall)
 	p.registerInfixFn(token.LBRACKET, p.parseIndex)
-	p.registerInfixFn(token.GREATER, p.parseCompare)
-	p.registerInfixFn(token.GREATER_EQUAL, p.parseCompare)
-	p.registerInfixFn(token.EQUAL, p.parseCompare)
-	p.registerInfixFn(token.LESS, p.parseCompare)
-	p.registerInfixFn(token.LESS_EQUAL, p.parseCompare)
-	p.registerInfixFn(token.NOT_EQUAL, p.parseCompare)
-	p.registerInfixFn(token.PLUS_ASSIGN, p.parsePlusAssign)
-	p.registerInfixFn(token.MINUS_ASSIGN, p.parseMinusAssign)
-	p.registerInfixFn(token.TIMES_ASSIGN, p.parseTimesAssign)
-	p.registerInfixFn(token.DIVIDE_ASSIGN, p.parseDivideAssign)
-	p.registerInfixFn(token.PLUS_PLUS, p.parsePlusPlus)
+	p.registerInfixFn(token.GREATER, p.parseGreater)
+	p.registerInfixFn(token.LESS, p.parseLesser)
 	p.registerInfixFn(token.AND, p.parseAnd)
 	p.registerInfixFn(token.OR, p.parseOr)
 	p.registerInfixFn(token.MOD, p.parseMod)
 	p.registerInfixFn(token.DOT, p.parseDot)
+	p.registerInfixFn(token.ASSIGN, p.parseAssign)
+	p.registerInfixFn(token.BANG, p.parseMidBang)
 
 	p.forward()
 	p.forward()
@@ -82,45 +79,21 @@ func NewParser(l *lexer.Lexer, env *environment.Environment) *Parser {
 func (p *Parser) Parse() []ast.Statement {
 	var statements []ast.Statement
 	for p.currentToken.Type != token.EOF {
-		s, err := p.parseStatement()
-		if err != nil {
-			panic(err)
-		}
-		statements = append(statements, s)
+		statements = append(statements, p.parseStatement())
 		p.forward()
 	}
 	return statements
 }
 
 // parseStatement 解析语句
-// 函数执行前 currentToken 指向语句的第一个token，函数执行后 currentToken 指向语句的最后一个token（一般是;）
-func (p *Parser) parseStatement() (ast.Statement, error) {
+// 函数执行前 currentToken 指向语句的第一个 token，函数执行后 currentToken 指向语句的最后一个token（一般是;）
+func (p *Parser) parseStatement() ast.Statement {
 	defer func() {
 		if p.expectPeekToken(token.SEMICOLON) {
 			p.forward()
 		}
 	}()
-
-	if p.expectToken(token.RETURN) {
-		p.forward() // 跳过 return
-		return &ast.Return{Expr: p.ParseExpression(token.PrecedenceLowest)}, nil
-	}
-
-	if p.expectToken(token.BREAK) {
-		p.forward() // 跳过 break
-		return &ast.Break{}, nil
-	}
-
-	expr := p.ParseExpression(token.PrecedenceLowest)
-	if p.expectPeekToken(token.ASSIGN) {
-		p.forward()
-		p.forward() // 跳过 =
-		return &ast.Assign{Left: expr, Right: p.ParseExpression(token.PrecedenceLowest)}, nil
-	} else if p.expectPeekToken(token.PLUS_PLUS) {
-		p.forward()
-		return &ast.PlusPlus{Left: expr}, nil
-	}
-	return &ast.ExpressionStatement{Expr: expr}, nil
+	return &ast.ExpressionStatement{Expr: p.ParseExpression(token.PrecedenceLowest)}
 }
 
 func (p *Parser) ParseExpression(precedence int) ast.Expression {
@@ -161,11 +134,19 @@ func (p *Parser) parseIdent() ast.Expression {
 }
 
 func (p *Parser) parseNumber() ast.Expression {
-	val, err := strconv.ParseFloat(p.currentToken.Value, 64)
+	if strings.Contains(p.currentToken.Value, ".") {
+		val, err := strconv.ParseFloat(p.currentToken.Value, 64)
+		if err != nil {
+			panic(fmt.Sprintf("parseNumber err: %v, value: %v", err, p.currentToken.Value))
+		}
+		return &ast.Number{Token: p.currentToken, Value: &object.Float{Val: val}}
+	}
+
+	val, err := strconv.ParseInt(p.currentToken.Value, 10, 64)
 	if err != nil {
 		panic(fmt.Sprintf("parseNumber err: %v, value: %v", err, p.currentToken.Value))
 	}
-	return &ast.Number{Token: p.currentToken, Value: &object.Float{Val: val}}
+	return &ast.Number{Token: p.currentToken, Value: &object.Int{Val: val}}
 }
 
 func (p *Parser) parseString() ast.Expression {
@@ -178,6 +159,21 @@ func (p *Parser) parseSlice() ast.Expression {
 	for !p.expectToken(token.RBRACKET) {
 		expr := p.ParseExpression(token.PrecedenceLowest)
 		p.forward()
+		if p.expectToken(token.SEMICOLON) {
+			p.forward() // 跳过;
+			if res.InitExpr != nil {
+				panic("invalid slice")
+			}
+			res.InitExpr = expr
+			continue
+		}
+		if res.InitExpr != nil {
+			if res.LenExpr != nil {
+				panic("invalid slice")
+			}
+			res.LenExpr = expr
+			continue
+		}
 		if p.expectToken(token.COMMA) {
 			p.forward() // 跳过,
 		}
@@ -252,11 +248,7 @@ func (p *Parser) parseFnLiteral() ast.Expression {
 	p.forward() // 跳过 {
 
 	for !p.expectToken(token.RBRACE) {
-		state, err := p.parseStatement()
-		if err != nil {
-			panic(err)
-		}
-		res.Statements = append(res.Statements, state)
+		res.Statements = append(res.Statements, p.parseStatement())
 		p.forward()
 	}
 
@@ -282,11 +274,7 @@ func (p *Parser) parseRuleLiteral() ast.Expression {
 	p.forward() // 跳过 {
 
 	for !p.expectToken(token.RBRACE) {
-		state, err := p.parseStatement()
-		if err != nil {
-			panic(err)
-		}
-		res.Statements = append(res.Statements, state)
+		res.Statements = append(res.Statements, p.parseStatement())
 		p.forward()
 	}
 
@@ -339,15 +327,29 @@ func (p *Parser) parseIfStatement() ([]ast.ExprStates, []ast.Statement) {
 	return ifs, elseStates
 }
 
+func (p *Parser) parseReturn() ast.Expression {
+	p.forward() // 跳过 return
+	if p.expectToken(token.SEMICOLON) {
+		return nil
+	}
+	return &ast.Return{Expr: p.ParseExpression(token.PrecedenceLowest)}
+}
+
+func (p *Parser) parseBreak() ast.Expression {
+	p.forward() // 跳过 break
+	return &ast.Break{}
+}
+
+func (p *Parser) parseContinue() ast.Expression {
+	p.forward() // 跳过 continue
+	return &ast.Continue{}
+}
+
 func (p *Parser) parseFor() ast.Expression {
 	p.forward() // 跳过 for
 	res := &ast.For{}
 
-	initial, err := p.parseStatement()
-	if err != nil {
-		panic(err)
-	}
-	res.Initial = initial
+	res.Initial = p.parseStatement()
 
 	if !p.expectToken(token.SEMICOLON) {
 		panic(fmt.Sprintf("expect ;, but got %s", p.currentToken.String()))
@@ -361,11 +363,7 @@ func (p *Parser) parseFor() ast.Expression {
 	}
 	p.forward() // 跳过 ;
 
-	post, err := p.parseStatement()
-	if err != nil {
-		panic(err)
-	}
-	res.Post = post
+	res.Post = p.parseStatement()
 	p.forward()
 
 	res.Statements = p.parseBlockStatement()
@@ -396,11 +394,7 @@ func (p *Parser) parseSwitch() ast.Expression {
 
 		p.forward() // 跳过 :
 		for !p.expectToken(token.CASE) && !p.expectToken(token.DEFAULT) {
-			state, err := p.parseStatement()
-			if err != nil {
-				panic(err)
-			}
-			states = append(states, state)
+			states = append(states, p.parseStatement())
 			p.forward()
 		}
 
@@ -418,11 +412,7 @@ func (p *Parser) parseSwitch() ast.Expression {
 		p.forward() // 跳过 :
 
 		for !p.expectToken(token.RBRACE) {
-			state, err := p.parseStatement()
-			if err != nil {
-				panic(err)
-			}
-			res.Default = append(res.Default, state)
+			res.Default = append(res.Default, p.parseStatement())
 			p.forward()
 		}
 	}
@@ -453,11 +443,7 @@ func (p *Parser) parseBlockStatement() []ast.Statement {
 
 	var res []ast.Statement
 	for !p.expectToken(token.RBRACE) {
-		state, err := p.parseStatement()
-		if err != nil {
-			panic(err)
-		}
-		res = append(res, state)
+		res = append(res, p.parseStatement())
 		p.forward()
 	}
 
@@ -470,31 +456,101 @@ func (p *Parser) parseBlockStatement() []ast.Statement {
 // 以下是中缀表达式的解析
 
 func (p *Parser) parsePlus(left ast.Expression) ast.Expression {
-	res := &ast.Plus{Left: left}
-	p.forward() // 跳过 +
-	res.Right = p.ParseExpression(token.PrecedenceAddMinus)
-	return res
+	p.forward()                    // 跳过 +
+	if p.expectToken(token.PLUS) { // ++
+		return &ast.Assign{
+			Left: left,
+			Right: &ast.Plus{
+				Left:  left,
+				Right: &ast.Number{Value: &object.Int{Val: 1}},
+			},
+		}
+	}
+
+	if p.expectToken(token.ASSIGN) { // +=
+		p.forward() // 跳过 =
+		return &ast.Assign{
+			Left: left,
+			Right: &ast.Plus{
+				Left:  left,
+				Right: p.ParseExpression(token.PrecedenceAddMinus),
+			},
+		}
+	}
+
+	return &ast.Plus{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceAddMinus),
+	}
 }
 
 func (p *Parser) parseMinus(left ast.Expression) ast.Expression {
-	res := &ast.Minus{Left: left}
-	p.forward() // 跳过 -
-	res.Right = p.ParseExpression(token.PrecedenceAddMinus)
-	return res
+	p.forward()                     // 跳过 -
+	if p.expectToken(token.MINUS) { // --
+		return &ast.Assign{
+			Left: left,
+			Right: &ast.Minus{
+				Left:  left,
+				Right: &ast.Number{Value: &object.Int{Val: 1}},
+			},
+		}
+	}
+
+	if p.expectToken(token.ASSIGN) { // -=
+		p.forward() // 跳过 =
+		return &ast.Assign{
+			Left: left,
+			Right: &ast.Minus{
+				Left:  left,
+				Right: p.ParseExpression(token.PrecedenceAddMinus),
+			},
+		}
+	}
+
+	return &ast.Minus{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceAddMinus),
+	}
 }
 
 func (p *Parser) parseTimes(left ast.Expression) ast.Expression {
-	res := &ast.Times{Left: left}
 	p.forward() // 跳过 *
-	res.Right = p.ParseExpression(token.PrecedenceMultiplyDivide)
-	return res
+
+	if p.expectToken(token.ASSIGN) { // *=
+		p.forward() // 跳过 =
+		return &ast.Assign{
+			Left: left,
+			Right: &ast.Times{
+				Left:  left,
+				Right: p.ParseExpression(token.PrecedenceAddMinus),
+			},
+		}
+	}
+
+	return &ast.Times{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceMultiplyDivide),
+	}
 }
 
 func (p *Parser) parseDivide(left ast.Expression) ast.Expression {
-	res := &ast.Divide{Left: left}
 	p.forward() // 跳过 /
-	res.Right = p.ParseExpression(token.PrecedenceMultiplyDivide)
-	return res
+
+	if p.expectToken(token.ASSIGN) { // /=
+		p.forward() // 跳过 =
+		return &ast.Assign{
+			Left: left,
+			Right: &ast.Divide{
+				Left:  left,
+				Right: p.ParseExpression(token.PrecedenceAddMinus),
+			},
+		}
+	}
+
+	return &ast.Divide{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceMultiplyDivide),
+	}
 }
 
 func (p *Parser) parseCall(left ast.Expression) ast.Expression {
@@ -538,76 +594,127 @@ func (p *Parser) parseIndex(left ast.Expression) ast.Expression {
 	return res
 }
 
-func (p *Parser) parseCompare(left ast.Expression) ast.Expression {
-	res := &ast.Compare{
-		Left:  left,
-		Token: p.currentToken,
+//func (p *Parser) parseCompare(left ast.Expression) ast.Expression {
+//	res := &ast.Compare{
+//		Left:  left,
+//		Token: p.currentToken,
+//	}
+//	p.forward() // 跳过比较运算符
+//	res.Right = p.ParseExpression(token.PrecedenceCompare)
+//	return res
+//}
+
+func (p *Parser) parseGreater(left ast.Expression) ast.Expression {
+	p.forward()                      // 跳过>
+	if p.expectToken(token.ASSIGN) { // >=
+		p.forward() // 跳过=
+		return &ast.Compare{
+			Flag:  ast.CompareGreaterEqual,
+			Left:  left,
+			Right: p.ParseExpression(token.PrecedenceCompare),
+		}
 	}
-	p.forward() // 跳过比较运算符
-	res.Right = p.ParseExpression(token.PrecedenceCompare)
-	return res
+
+	return &ast.Compare{
+		Flag:  ast.CompareGreaterThan,
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceCompare),
+	}
 }
 
-func (p *Parser) parsePlusAssign(left ast.Expression) ast.Expression {
-	res := &ast.PlusAssign{Left: left}
-	p.forward() // 跳过 +=
-	res.Right = p.ParseExpression(token.PrecedenceLowest)
-	return res
-}
+func (p *Parser) parseLesser(left ast.Expression) ast.Expression {
+	p.forward()                      // 跳过<
+	if p.expectToken(token.ASSIGN) { // <=
+		p.forward() // 跳过=
+		return &ast.Compare{
+			Flag:  ast.CompareLessEqual,
+			Left:  left,
+			Right: p.ParseExpression(token.PrecedenceCompare),
+		}
+	}
 
-func (p *Parser) parseMinusAssign(left ast.Expression) ast.Expression {
-	res := &ast.MinusAssign{Left: left}
-	p.forward() // 跳过 -=
-	res.Right = p.ParseExpression(token.PrecedenceLowest)
-	return res
-}
-
-func (p *Parser) parseTimesAssign(left ast.Expression) ast.Expression {
-	res := &ast.TimesAssign{Left: left}
-	p.forward() // 跳过 *=
-	res.Right = p.ParseExpression(token.PrecedenceLowest)
-	return res
-}
-
-func (p *Parser) parseDivideAssign(left ast.Expression) ast.Expression {
-	res := &ast.DivideAssign{Left: left}
-	p.forward() // 跳过 /=
-	res.Right = p.ParseExpression(token.PrecedenceLowest)
-	return res
-}
-
-func (p *Parser) parsePlusPlus(left ast.Expression) ast.Expression {
-	res := &ast.PlusPlus{Left: left}
-	p.forward() // 跳过 ++
-	return res
+	return &ast.Compare{
+		Flag:  ast.CompareLessThan,
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceCompare),
+	}
 }
 
 func (p *Parser) parseAnd(left ast.Expression) ast.Expression {
-	res := &ast.And{Left: left}
-	p.forward() // 跳过 &&
-	res.Right = p.ParseExpression(token.PrecedenceAnd)
-	return res
+	p.forward()                   // 跳过 &
+	if p.expectToken(token.AND) { // &&
+		p.forward() // 跳过 &
+		return &ast.LogicAnd{
+			Left:  left,
+			Right: p.ParseExpression(token.PrecedenceLogicAnd),
+		}
+	}
+
+	return &ast.And{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceMultiplyDivide),
+	}
 }
 
 func (p *Parser) parseOr(left ast.Expression) ast.Expression {
-	res := &ast.Or{Left: left}
-	p.forward() // 跳过 ||
-	res.Right = p.ParseExpression(token.PrecedenceOr)
-	return res
+	p.forward()                  // 跳过 |
+	if p.expectToken(token.OR) { // ||
+		p.forward() // 跳过 |
+		return &ast.LogicOr{
+			Left:  left,
+			Right: p.ParseExpression(token.PrecedenceLogicOr),
+		}
+	}
+	return &ast.Or{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceAddMinus),
+	}
 }
 
 func (p *Parser) parseMod(left ast.Expression) ast.Expression {
-	res := &ast.Mod{Left: left}
 	p.forward() // 跳过 %
-	res.Right = p.ParseExpression(token.GetPrecedence(token.MOD))
-	return res
+	return &ast.Mod{
+		Left:  left,
+		Right: p.ParseExpression(token.GetPrecedence(token.MOD)),
+	}
 }
 
 func (p *Parser) parseDot(left ast.Expression) ast.Expression {
-	res := &ast.Dot{Left: left}
 	p.forward() // 跳过 .
-	res.Right = p.ParseExpression(token.GetPrecedence(token.DOT))
-	return res
+	return &ast.Dot{
+		Left:  left,
+		Right: p.ParseExpression(token.GetPrecedence(token.DOT)),
+	}
+}
+
+func (p *Parser) parseAssign(left ast.Expression) ast.Expression {
+	p.forward()                      // 跳过 =
+	if p.expectToken(token.ASSIGN) { // ==
+		p.forward() // 跳过 =
+		return &ast.Compare{
+			Flag:  ast.CompareEqual,
+			Left:  left,
+			Right: p.ParseExpression(token.PrecedenceCompare),
+		}
+	}
+
+	return &ast.Assign{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceLowest),
+	}
+}
+
+func (p *Parser) parseMidBang(left ast.Expression) ast.Expression {
+	p.forward()                      // 跳过 !
+	if p.expectToken(token.ASSIGN) { // !=
+		p.forward() // 跳过 =
+		return &ast.Compare{
+			Flag:  ast.CompareNotEqual,
+			Left:  left,
+			Right: p.ParseExpression(token.PrecedenceCompare),
+		}
+	}
+	panic("invalid !")
 }
 
 func (p *Parser) forward() {

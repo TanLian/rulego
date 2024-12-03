@@ -5,8 +5,8 @@ const (
 	PrecedenceLowest int = iota
 	PrecedenceAssign     // =
 	//PrecedenceEquals             // ==
-	PrecedenceOr             // ||
-	PrecedenceAnd            // &&
+	PrecedenceLogicOr        // ||
+	PrecedenceLogicAnd       // &&
 	PrecedenceCompare        // > or <
 	PrecedenceAddMinus       // + or -
 	PrecedenceMultiplyDivide // * or /
@@ -16,28 +16,20 @@ const (
 )
 
 var Precedences = map[TokenType]int{
-	ASSIGN:        PrecedenceAssign,
-	PLUS:          PrecedenceAddMinus,
-	MINUS:         PrecedenceAddMinus,
-	PLUS_ASSIGN:   PrecedenceAddMinus,
-	MINUS_ASSIGN:  PrecedenceAddMinus,
-	TIMES_ASSIGN:  PrecedenceMultiplyDivide,
-	DIVIDE_ASSIGN: PrecedenceMultiplyDivide,
-	TIMES:         PrecedenceMultiplyDivide,
-	DIVIDE:        PrecedenceMultiplyDivide,
-	MOD:           PrecedenceMultiplyDivide,
-	BANG:          PrecedencePrefix,
-	GREATER:       PrecedenceCompare,
-	GREATER_EQUAL: PrecedenceCompare,
-	LESS:          PrecedenceCompare,
-	LESS_EQUAL:    PrecedenceCompare,
-	EQUAL:         PrecedenceCompare,
-	NOT_EQUAL:     PrecedenceCompare,
-	AND:           PrecedenceAnd,
-	OR:            PrecedenceOr,
-	LPAREN:        PrecedenceCall,
-	LBRACKET:      PrecedenceIndex,
-	DOT:           PrecedenceIndex,
+	ASSIGN:   PrecedenceAssign,
+	PLUS:     PrecedenceAddMinus,
+	MINUS:    PrecedenceAddMinus,
+	TIMES:    PrecedenceMultiplyDivide,
+	DIVIDE:   PrecedenceMultiplyDivide,
+	MOD:      PrecedenceMultiplyDivide,
+	BANG:     PrecedencePrefix,
+	GREATER:  PrecedenceCompare,
+	LESS:     PrecedenceCompare,
+	AND:      PrecedenceMultiplyDivide,
+	OR:       PrecedenceAddMinus,
+	LPAREN:   PrecedenceCall,
+	LBRACKET: PrecedenceIndex,
+	DOT:      PrecedenceIndex,
 }
 
 func GetPrecedence(t TokenType) int {

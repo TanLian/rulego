@@ -22,7 +22,7 @@ func (fl *FnLiteralObj) Eval(env *environment.Environment) object.Object {
 
 func (fl *FnLiteralObj) Call(env *environment.Environment) object.Object {
 	for _, v := range fl.Statements {
-		if obj, ret, _ := v.Exec(env); ret {
+		if obj, flg := v.Exec(env); flg&RETURN != 0 {
 			return obj
 		}
 	}

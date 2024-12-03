@@ -34,7 +34,7 @@ func (idx *Index) Eval(env *environment.Environment) object.Object {
 			return &object.Slice{Val: s.Val[int(start):int(end)]}
 		}
 
-		if index, ok := key.(float64); !ok {
+		if index, ok := key.(int64); !ok {
 			panic("invalid index expression")
 		} else {
 			return object.New(s.Val[int(index)])

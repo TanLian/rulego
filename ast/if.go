@@ -44,7 +44,7 @@ func (f *If) Eval(env *environment.Environment) object.Object {
 		if object.TransToBool(exprStates.Expr.Eval(env)) {
 			childEnv := environment.New(env)
 			for _, v := range exprStates.States {
-				if obj, ret, _ := v.Exec(childEnv); ret {
+				if obj, flg := v.Exec(childEnv); flg&RETURN != 0 {
 					return obj
 				}
 			}
@@ -53,33 +53,35 @@ func (f *If) Eval(env *environment.Environment) object.Object {
 
 	childEnv := environment.New(env)
 	for _, v := range f.Else {
-		if obj, ret, _ := v.Exec(childEnv); ret {
+		if obj, flg := v.Exec(childEnv); flg&RETURN != 0 {
 			return obj
 		}
 	}
 	return object.Null
 }
 
-func (f *If) Exec(env *environment.Environment) (object.Object, bool, bool) {
+func (f *If) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 	for _, exprStates := range f.Ifs {
 		if object.TransToBool(exprStates.Expr.Eval(env)) {
 			childEnv := environment.New(env)
 			for _, v := range exprStates.States {
-				if obj, ret, brk := v.Exec(childEnv); ret || brk {
-					return obj, ret, brk
+				obj, flg := v.Exec(childEnv)
+				if flg&RETURN != 0 || flg&BREAK != 0 || flg&CONTINUE != 0 {
+					return obj, flg
 				}
 			}
-			return object.Null, false, false
+			return object.Null, 0
 		}
 	}
 
 	childEnv := environment.New(env)
 	for _, v := range f.Else {
-		if obj, ret, brk := v.Exec(childEnv); ret || brk {
-			return obj, ret, brk
+		obj, flg := v.Exec(childEnv)
+		if flg&RETURN != 0 || flg&BREAK != 0 || flg&CONTINUE != 0 {
+			return obj, flg
 		}
 	}
-	return object.Null, false, false
+	return object.Null, 0
 }
 
 func (f *If) String() string {

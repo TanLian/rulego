@@ -9,10 +9,16 @@ type Break struct{}
 
 func (b *Break) statementNode() {}
 
-func (b *Break) Exec(env *environment.Environment) (object.Object, bool, bool) {
-	return object.Null, false, true
+func (b *Break) Exec(env *environment.Environment) (object.Object, ExecFlag) {
+	return object.Null, BREAK
+}
+
+func (b *Break) Eval(env *environment.Environment) object.Object {
+	return object.Null
 }
 
 func (b *Break) String() string {
 	return "break"
 }
+
+func (b *Break) expressionNode() {}

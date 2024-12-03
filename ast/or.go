@@ -13,11 +13,20 @@ type Or struct {
 }
 
 func (a *Or) Eval(env *environment.Environment) object.Object {
-	return &object.Bool{Val: object.TransToBool(a.Left.Eval(env)) || object.TransToBool(a.Right.Eval(env))}
+	left, ok := a.Left.Eval(env).(*object.Int)
+	if !ok {
+		panic(fmt.Sprintf("type error: %s is not int", a.Left.String()))
+	}
+
+	right, ok := a.Right.Eval(env).(*object.Int)
+	if !ok {
+		panic(fmt.Sprintf("type error: %s is not int", a.Right.String()))
+	}
+	return &object.Int{Val: left.Val | right.Val}
 }
 
 func (a *Or) String() string {
-	return fmt.Sprintf("%s || %s", a.Left.String(), a.Right.String())
+	return fmt.Sprintf("%s | %s", a.Left.String(), a.Right.String())
 }
 
 func (a *Or) expressionNode() {}

@@ -8,7 +8,7 @@ import (
 
 type Number struct {
 	Token token.Token
-	Value *object.Float
+	Value object.Object
 }
 
 func (ne *Number) Eval(env *environment.Environment) object.Object {

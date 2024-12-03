@@ -13,10 +13,16 @@ type Return struct {
 
 func (r *Return) statementNode() {}
 
-func (r *Return) Exec(env *environment.Environment) (object.Object, bool, bool) {
-	return r.Expr.Eval(env), true, false
+func (r *Return) Exec(env *environment.Environment) (object.Object, ExecFlag) {
+	return r.Expr.Eval(env), RETURN
+}
+
+func (r *Return) Eval(env *environment.Environment) object.Object {
+	return r.Expr.Eval(env)
 }
 
 func (r *Return) String() string {
 	return fmt.Sprintf("return %s;", r.Expr.String())
 }
+
+func (r *Return) expressionNode() {}

@@ -11,10 +11,6 @@ func (m *Map) Type() Type {
 }
 
 func (m *Map) GetValue() any {
-	//res := make(map[any]any)
-	//for k, v := range m.Val {
-	//	res[k] = v
-	//}
 	return m.Val
 }
 

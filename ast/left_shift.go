@@ -7,12 +7,12 @@ import (
 	"github.com/tanlian/rulego/object"
 )
 
-type BitwiseAnd struct {
+type LeftShift struct {
 	Left  Expression
 	Right Expression
 }
 
-func (a *BitwiseAnd) Eval(env *environment.Environment) object.Object {
+func (a *LeftShift) Eval(env *environment.Environment) object.Object {
 	left, ok := a.Left.Eval(env).(*object.Int)
 	if !ok {
 		panic(fmt.Sprintf("type error: %s is not int", a.Left.String()))
@@ -22,11 +22,11 @@ func (a *BitwiseAnd) Eval(env *environment.Environment) object.Object {
 	if !ok {
 		panic(fmt.Sprintf("type error: %s is not int", a.Right.String()))
 	}
-	return &object.Int{Val: left.Val & right.Val}
+	return &object.Int{Val: left.Val << right.Val}
 }
 
-func (a *BitwiseAnd) String() string {
-	return fmt.Sprintf("%s & %s", a.Left.String(), a.Right.String())
+func (a *LeftShift) String() string {
+	return fmt.Sprintf("%s << %s", a.Left.String(), a.Right.String())
 }
 
-func (a *BitwiseAnd) expressionNode() {}
+func (a *LeftShift) expressionNode() {}

@@ -10,9 +10,9 @@ import (
 )
 
 func TestNewExpression1(t *testing.T) {
-	expr := NewExpression("a + b")
-	t.Log(expr.Eval(map[string]any{"a": 1, "b": 2})) // result is 3
-	t.Log(expr.Eval(map[string]any{"a": 3, "b": 2})) // result is 5
+	env := environment.New(environment.Root)        // 定义一个 environment 对象
+	env.Inject("m", map[string]int{"a": 1, "b": 2}) // 注入map
+	t.Log(NewExpression(`m["a"]+m["b"]`).Eval(env)) // result is 3
 }
 
 func TestNewExpression(t *testing.T) {

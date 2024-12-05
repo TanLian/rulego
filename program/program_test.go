@@ -49,15 +49,157 @@ println(construct2DArray([1,2,3,4], 2, 2));
 `
 
 var input3 = `
-arr = [1,2];
-if arr[1] > arr[0] {
-	println("ok");
+fn subarraySum(nums, k) {
+    sum = [];
+    for i = 0; i < nums.Len(); i++ {
+        tmp = 0;
+        if i > 0 {
+            tmp = nums[i] + sum[i-1];
+        } else {
+            tmp = nums[i];
+        }
+        sum.Push(tmp);
+    }
+
+    m = {};
+    res = 0;
+    for i = 0; i < nums.Len(); i += 1 {
+        if sum[i] == k {
+            res += 1;
+        }
+        res += m[sum[i]-k];
+		m[sum[i]] += 1;
+    }
+    return res;
 }
+
+ccc = subarraySum([1,2,3],3);
+println("res: ", ccc);
+`
+
+var testMap = `
+// 定义并初始化
+m = {"a":3};
+
+// insert
+m["b"] = 2;
+
+// update
+m["a"] += 2;
+m["b"] += 2;
+println(m);
+
+d = m["c"]; // 查询一个不存在的key的value
+e = d+1;
+println("d:", d);
+println("e:", e);
+
+// 判断key是否存在
+println("contains: ", m.ContainsKey("e"));
+println("contains: ", m.ContainsKey("a"));
+
+// 删除key
+m.Remove("b");
+println(m);
+`
+
+var testSlice = `
+// 定义及初始化
+a = [0;10]; // 长度为10，且每个元素都是0
+a[1] = 1; // update
+println(a);
+
+b = [1,2,3];
+println(b);
+`
+
+var testContinue = `
+for i = 0; i < 5; i++ {
+	if i == 3 {
+		continue;
+	}
+	println(i);
+}
+`
+
+var testMinusMinus = `
+a = 5;
+a--;
+println(a);
+`
+
+var testPlusAssign = `
+a = 10;
+a += 6;
+println(a);
+`
+
+var testMinusAssign = `
+a = 10;
+a -= 6;
+println(a);
+`
+
+var input4 = `
+fn aaa(nums) {
+	a = 1;
+	nums.Push(1);
+	//nums.Push(b);
+}
+
+fn bbb() {
+	nums = [];
+	b = a;
+	aaa(nums);
+	println(nums);
+}
+
+a = 2;
+c = 3;
+bbb();
+`
+
+var input5 = `
+fn max(a,b) {
+	if a > b {
+		a
+	} else {
+		b
+	}
+}
+
+println(max(3,5));
+`
+
+var testPrecedence = `
+println(5 + 3 & 6); // 0
+println(5 & 3 + 6); // 1
+println(10 - 4 | 1); // 7
+println((5 + 3) & 6); // 0
+println(3 * 2 & 7); // 6
+println(12 / 3 | 4); // 4
+println(5 + 3 * 2 & 7 | 1); // 3
+println((5 + 3) * (2 & 7) | 1); // 17
+println((5 << 2) + (3 & 1)); // 21
+println((20 >> 2) - (8 | 1)); // -4
+println(0 & 1 + 2); // 0
+println(-1 | 5 * 2); // -1
+println(-5 ^ 4 - 3); // -6
+println((1 << 31) + 5 & 7); // 5
+println(((((5 + 3) * 2 & 7) | 1) ^ 4) << 2); // 20
+println(2 > 1^3); // false
+println(1<<3&77); // 8
+println(1+2<<5); // 96
+`
+
+var input6 = `
+a = 10 >> 2;
+println(if 1 == 0 {3} else {4});
 `
 
 func TestProgram_Run(t *testing.T) {
 	p := New()
-	p.Run(testSwitch)
+	p.Run(input6)
 }
 
 var testReverseString = `
@@ -139,5 +281,49 @@ println(a);
 var testInlineComments = `
 a = []; 
 // a.Push(1);
+println(a);
+`
+
+var testFib = `
+fn fib(n) {
+	if n < 2 {
+		return 1;
+	}
+	return fib(n-2)+fib(n-1);
+}
+
+c = fib(10);
+println(c);
+`
+
+// testBacktracking 测试全排列
+var testBacktracking = `
+fn backtracking(nums, ns, used, result) {
+    if ns.Len() == nums.Len() {
+        result.Push(ns.Clone());
+    }
+
+    for i = 0; i < nums.Len(); i++ {
+        if used[i] {
+            continue;
+        }
+
+        used[i] = true;
+        ns.Push(nums[i]);
+        backtracking(nums, ns, used, result);
+        used[i] = false;
+        ns.Pop();
+    }
+}
+
+fn permute(nums) {
+    used = [false; nums.Len()];
+    ns = [];
+    result = [];
+    backtracking(nums, ns, used, result);
+    return result;
+}
+
+a = permute([1,2,3]);
 println(a);
 `

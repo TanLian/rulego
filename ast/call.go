@@ -32,15 +32,7 @@ func (c *Call) Eval(env *environment.Environment) object.Object {
 		// 优先使用用户自定义的函数
 		if obj, ok := env.Get(fn.Token.Value); ok {
 			if fnLiteral, ok := obj.(*FnLiteralObj); ok {
-				if len(fnLiteral.Args) != len(args.Data) {
-					panic("the length of parameters is not equal")
-				}
-
-				childEnv := environment.New(env)
-				for i := 0; i < len(fnLiteral.Args); i++ {
-					childEnv.SetCurrent(fnLiteral.Args[i], args.Data[i].Eval(env))
-				}
-				return fnLiteral.Call(childEnv)
+				return fnLiteral.Call(inObj)
 			}
 
 			if fnObj, ok := obj.(*object.Fn); ok {

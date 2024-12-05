@@ -47,7 +47,9 @@ func NewParser(l *lexer.Lexer, env *environment.Environment) *Parser {
 	p.registerPrefixFn(token.FUNC, p.parseFnLiteral)
 	p.registerPrefixFn(token.RULE, p.parseRuleLiteral)
 	p.registerPrefixFn(token.BANG, p.parseBang)
+	p.registerPrefixFn(token.PLUS, p.parsePositive)
 	p.registerPrefixFn(token.MINUS, p.parseNegative)
+	p.registerPrefixFn(token.XOR, p.parseBitwiseNot)
 	p.registerPrefixFn(token.IF, p.parseIf)
 	p.registerPrefixFn(token.FOR, p.parseFor)
 	p.registerPrefixFn(token.SWITCH, p.parseSwitch)
@@ -63,12 +65,19 @@ func NewParser(l *lexer.Lexer, env *environment.Environment) *Parser {
 	p.registerInfixFn(token.LBRACKET, p.parseIndex)
 	p.registerInfixFn(token.GREATER, p.parseGreater)
 	p.registerInfixFn(token.LESS, p.parseLesser)
+	p.registerInfixFn(token.EQUAL, p.parseEqual)
+	p.registerInfixFn(token.NOT_EQUAL, p.parseNotEqual)
 	p.registerInfixFn(token.AND, p.parseAnd)
+	p.registerInfixFn(token.LOGIC_AND, p.parseLogicAnd)
 	p.registerInfixFn(token.OR, p.parseOr)
+	p.registerInfixFn(token.XOR, p.parseXor)
+	p.registerInfixFn(token.LOGIC_OR, p.parseLogicOr)
+	p.registerInfixFn(token.LEFT_SHIFT, p.parseLeftShift)
+	p.registerInfixFn(token.RIGHT_SHIFT, p.parseRightShift)
 	p.registerInfixFn(token.MOD, p.parseMod)
 	p.registerInfixFn(token.DOT, p.parseDot)
 	p.registerInfixFn(token.ASSIGN, p.parseAssign)
-	p.registerInfixFn(token.BANG, p.parseMidBang)
+	p.registerInfixFn(token.POWER, p.parsePower)
 
 	p.forward()
 	p.forward()
@@ -93,6 +102,20 @@ func (p *Parser) parseStatement() ast.Statement {
 			p.forward()
 		}
 	}()
+
+	// block statement
+	if p.expectToken(token.LBRACE) {
+		p.forward() // 跳过 {
+		var states []ast.Statement
+		for !p.expectToken(token.RBRACE) {
+			states = append(states, p.parseStatement())
+			p.forward()
+		}
+		if !p.expectToken(token.RBRACE) {
+			panic(fmt.Sprintf("expect }, but got %s", p.currentToken.Value))
+		}
+		return &ast.Block{States: states}
+	}
 	return &ast.ExpressionStatement{Expr: p.ParseExpression(token.PrecedenceLowest)}
 }
 
@@ -294,6 +317,16 @@ func (p *Parser) parseNegative() ast.Expression {
 	return &ast.Negative{Expr: p.ParseExpression(token.PrecedencePrefix)}
 }
 
+func (p *Parser) parsePositive() ast.Expression {
+	p.forward() // 跳过 +
+	return &ast.Positive{Expr: p.ParseExpression(token.PrecedencePrefix)}
+}
+
+func (p *Parser) parseBitwiseNot() ast.Expression {
+	p.forward() // 跳过 ^
+	return &ast.BitwiseNot{Expr: p.ParseExpression(token.PrecedencePrefix)}
+}
+
 func (p *Parser) parseIf() ast.Expression {
 	ifs, elseStates := p.parseIfStatement()
 	return &ast.If{
@@ -456,8 +489,8 @@ func (p *Parser) parseBlockStatement() []ast.Statement {
 // 以下是中缀表达式的解析
 
 func (p *Parser) parsePlus(left ast.Expression) ast.Expression {
-	p.forward()                    // 跳过 +
-	if p.expectToken(token.PLUS) { // ++
+	p.forward()                                                                                                 // 跳过 +
+	if p.expectToken(token.PLUS) && (p.peekToken.Type == token.SEMICOLON || p.peekToken.Type == token.LBRACE) { // ++
 		return &ast.Assign{
 			Left: left,
 			Right: &ast.Plus{
@@ -485,8 +518,8 @@ func (p *Parser) parsePlus(left ast.Expression) ast.Expression {
 }
 
 func (p *Parser) parseMinus(left ast.Expression) ast.Expression {
-	p.forward()                     // 跳过 -
-	if p.expectToken(token.MINUS) { // --
+	p.forward()                                                                                                  // 跳过 -
+	if p.expectToken(token.MINUS) && (p.peekToken.Type == token.SEMICOLON || p.peekToken.Type == token.LBRACE) { // --
 		return &ast.Assign{
 			Left: left,
 			Right: &ast.Minus{
@@ -522,7 +555,7 @@ func (p *Parser) parseTimes(left ast.Expression) ast.Expression {
 			Left: left,
 			Right: &ast.Times{
 				Left:  left,
-				Right: p.ParseExpression(token.PrecedenceAddMinus),
+				Right: p.ParseExpression(token.PrecedenceLowest),
 			},
 		}
 	}
@@ -542,7 +575,7 @@ func (p *Parser) parseDivide(left ast.Expression) ast.Expression {
 			Left: left,
 			Right: &ast.Divide{
 				Left:  left,
-				Right: p.ParseExpression(token.PrecedenceAddMinus),
+				Right: p.ParseExpression(token.PrecedenceLowest),
 			},
 		}
 	}
@@ -594,16 +627,6 @@ func (p *Parser) parseIndex(left ast.Expression) ast.Expression {
 	return res
 }
 
-//func (p *Parser) parseCompare(left ast.Expression) ast.Expression {
-//	res := &ast.Compare{
-//		Left:  left,
-//		Token: p.currentToken,
-//	}
-//	p.forward() // 跳过比较运算符
-//	res.Right = p.ParseExpression(token.PrecedenceCompare)
-//	return res
-//}
-
 func (p *Parser) parseGreater(left ast.Expression) ast.Expression {
 	p.forward()                      // 跳过>
 	if p.expectToken(token.ASSIGN) { // >=
@@ -641,33 +664,58 @@ func (p *Parser) parseLesser(left ast.Expression) ast.Expression {
 }
 
 func (p *Parser) parseAnd(left ast.Expression) ast.Expression {
-	p.forward()                   // 跳过 &
-	if p.expectToken(token.AND) { // &&
-		p.forward() // 跳过 &
-		return &ast.LogicAnd{
-			Left:  left,
-			Right: p.ParseExpression(token.PrecedenceLogicAnd),
-		}
-	}
-
-	return &ast.And{
+	p.forward() // 跳过 &
+	return &ast.BitwiseAnd{
 		Left:  left,
-		Right: p.ParseExpression(token.PrecedenceMultiplyDivide),
+		Right: p.ParseExpression(token.PrecedenceBitwiseAnd),
+	}
+}
+
+func (p *Parser) parseLogicAnd(left ast.Expression) ast.Expression {
+	p.forward() // 跳过 &&
+	return &ast.LogicAnd{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceLogicAnd),
 	}
 }
 
 func (p *Parser) parseOr(left ast.Expression) ast.Expression {
-	p.forward()                  // 跳过 |
-	if p.expectToken(token.OR) { // ||
-		p.forward() // 跳过 |
-		return &ast.LogicOr{
-			Left:  left,
-			Right: p.ParseExpression(token.PrecedenceLogicOr),
-		}
-	}
+	p.forward() // 跳过 |
 	return &ast.Or{
 		Left:  left,
-		Right: p.ParseExpression(token.PrecedenceAddMinus),
+		Right: p.ParseExpression(token.PrecedenceBitwiseOr),
+	}
+}
+
+func (p *Parser) parseXor(left ast.Expression) ast.Expression {
+	p.forward() // 跳过 ^
+	return &ast.BitwiseXOR{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceBitwiseXor),
+	}
+}
+
+func (p *Parser) parseLeftShift(left ast.Expression) ast.Expression {
+	p.forward() // 跳过 <<
+	return &ast.LeftShift{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceBitShift),
+	}
+}
+
+func (p *Parser) parseRightShift(left ast.Expression) ast.Expression {
+	p.forward() // 跳过 >>
+	return &ast.RightShift{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceBitShift),
+	}
+}
+
+func (p *Parser) parseLogicOr(left ast.Expression) ast.Expression {
+	p.forward() // 跳过 ||
+	return &ast.LogicOr{
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceLogicOr),
 	}
 }
 
@@ -676,6 +724,14 @@ func (p *Parser) parseMod(left ast.Expression) ast.Expression {
 	return &ast.Mod{
 		Left:  left,
 		Right: p.ParseExpression(token.GetPrecedence(token.MOD)),
+	}
+}
+
+func (p *Parser) parsePower(left ast.Expression) ast.Expression {
+	p.forward() // 跳过 **
+	return &ast.Power{
+		Left:  left,
+		Right: p.ParseExpression(token.GetPrecedence(token.POWER)),
 	}
 }
 
@@ -688,33 +744,29 @@ func (p *Parser) parseDot(left ast.Expression) ast.Expression {
 }
 
 func (p *Parser) parseAssign(left ast.Expression) ast.Expression {
-	p.forward()                      // 跳过 =
-	if p.expectToken(token.ASSIGN) { // ==
-		p.forward() // 跳过 =
-		return &ast.Compare{
-			Flag:  ast.CompareEqual,
-			Left:  left,
-			Right: p.ParseExpression(token.PrecedenceCompare),
-		}
-	}
-
+	p.forward() // 跳过 =
 	return &ast.Assign{
 		Left:  left,
 		Right: p.ParseExpression(token.PrecedenceLowest),
 	}
 }
 
-func (p *Parser) parseMidBang(left ast.Expression) ast.Expression {
-	p.forward()                      // 跳过 !
-	if p.expectToken(token.ASSIGN) { // !=
-		p.forward() // 跳过 =
-		return &ast.Compare{
-			Flag:  ast.CompareNotEqual,
-			Left:  left,
-			Right: p.ParseExpression(token.PrecedenceCompare),
-		}
+func (p *Parser) parseEqual(left ast.Expression) ast.Expression {
+	p.forward() // 跳过 ==
+	return &ast.Compare{
+		Flag:  ast.CompareEqual,
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceCompare),
 	}
-	panic("invalid !")
+}
+
+func (p *Parser) parseNotEqual(left ast.Expression) ast.Expression {
+	p.forward() // 跳过 !=
+	return &ast.Compare{
+		Flag:  ast.CompareNotEqual,
+		Left:  left,
+		Right: p.ParseExpression(token.PrecedenceCompare),
+	}
 }
 
 func (p *Parser) forward() {

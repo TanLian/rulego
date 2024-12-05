@@ -23,7 +23,7 @@ func (b *Negative) Eval(env *environment.Environment) object.Object {
 }
 
 func (b *Negative) String() string {
-	return fmt.Sprintf("!%s", b.Expr.String())
+	return fmt.Sprintf("-%s", b.Expr.String())
 }
 
 func (b *Negative) expressionNode() {}

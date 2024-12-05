@@ -71,8 +71,8 @@ func (as *Assign) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 }
 
 func (as *Assign) Eval(env *environment.Environment) object.Object {
-	res, _ := as.Exec(env)
-	return res
+	as.Exec(env)
+	return object.Null
 }
 
 func (as *Assign) String() string {

@@ -51,6 +51,13 @@ func (p *Plus) Eval(env *environment.Environment) object.Object {
 		panic("invalid plus expression")
 	}
 
+	// slice + slice
+	if leftObj, ok := left.(*object.Slice); ok {
+		if rightObj, ok := right.(*object.Slice); ok {
+			return &object.Slice{Val: append(leftObj.Val, rightObj.Val...)}
+		}
+	}
+
 	if left.Type() == object.TypeUndefined {
 		if rightObj, ok := right.(*object.Int); ok {
 			return &object.Int{Val: rightObj.Val}
@@ -62,6 +69,7 @@ func (p *Plus) Eval(env *environment.Environment) object.Object {
 			return &object.String{Val: append([]rune(nil), rightObj.Val...)}
 		}
 	}
+
 	panic("invalid plus expression")
 }
 

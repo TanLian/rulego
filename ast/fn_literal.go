@@ -20,8 +20,22 @@ func (fl *FnLiteralObj) Eval(env *environment.Environment) object.Object {
 	return object.Null
 }
 
-func (fl *FnLiteralObj) Call(env *environment.Environment) object.Object {
-	for _, v := range fl.Statements {
+func (fl *FnLiteralObj) Call(args []object.Object) object.Object {
+	if len(fl.Args) != len(args) {
+		panic("the length of parameters is not equal")
+	}
+
+	env := environment.New(environment.Root)
+	for i := 0; i < len(fl.Args); i++ {
+		env.SetCurrent(fl.Args[i], args[i])
+	}
+	for i, v := range fl.Statements {
+		if i == len(fl.Statements)-1 {
+			if expr, ok := v.(*ExpressionStatement); ok {
+				return expr.Expr.Eval(env)
+			}
+		}
+
 		if obj, flg := v.Exec(env); flg&RETURN != 0 {
 			return obj
 		}

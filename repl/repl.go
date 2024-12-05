@@ -15,6 +15,7 @@ func Start() {
 	fmt.Println("RuleGo REPL")
 	fmt.Println("Type 'exit' to quit")
 	pro := program.New()
+	pro.SetRepl(true)
 
 	for {
 		fmt.Print(">> ")

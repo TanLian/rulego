@@ -13,6 +13,7 @@ const (
 	MINUS
 	TIMES
 	DIVIDE
+	POWER
 
 	// 括号
 	LPAREN   // (
@@ -33,8 +34,10 @@ const (
 	COLON     // :
 	MOD       // %
 
-	GREATER // >
-	LESS    // <
+	GREATER   // >
+	LESS      // <
+	EQUAL     // ==
+	NOT_EQUAL // !=
 
 	IDENTIFIER
 	ASSIGN // =
@@ -50,9 +53,14 @@ const (
 	DEFAULT
 	RULE
 
-	AND  // &
-	OR   // |
-	BANG // !
+	AND         // &
+	OR          // |
+	XOR         // ^
+	LEFT_SHIFT  // <<
+	RIGHT_SHIFT // >>
+	LOGIC_AND   // &&
+	LOGIC_OR    // ||
+	BANG        // !
 
 	INLINE_COMMENTS
 
@@ -72,6 +80,7 @@ func (t Token) String() string {
 		MINUS:           "minus",
 		TIMES:           "times",
 		DIVIDE:          "divide",
+		POWER:           "power",
 		BANG:            "bang",
 		MOD:             "mod",
 		LPAREN:          "lparen",
@@ -91,6 +100,8 @@ func (t Token) String() string {
 		ASSIGN:          "assign",
 		GREATER:         "greater",
 		LESS:            "less",
+		EQUAL:           "equal",
+		NOT_EQUAL:       "not_equal",
 		IF:              "if",
 		ELSE:            "else",
 		SWITCH:          "switch",
@@ -103,6 +114,11 @@ func (t Token) String() string {
 		CONTINUE:        "continue",
 		AND:             "&",
 		OR:              "|",
+		XOR:             "^",
+		LEFT_SHIFT:      "<<",
+		RIGHT_SHIFT:     ">>",
+		LOGIC_AND:       "&&",
+		LOGIC_OR:        "||",
 		INLINE_COMMENTS: "//",
 		EOF:             "eof",
 	}

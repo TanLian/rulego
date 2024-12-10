@@ -2,6 +2,7 @@ package object
 
 import (
 	"reflect"
+	"strings"
 )
 
 type Type int
@@ -76,6 +77,10 @@ func ToObject(value reflect.Value) Object {
 		}
 	case reflect.Ptr:
 		if value.Elem().Kind() == reflect.Struct {
+			if strings.Contains(value.Elem().String(), "object.RgStruct") {
+				a := value.Elem().Interface().(RgStruct)
+				return &a
+			}
 			return &Struct{
 				Value:           value,
 				methodToArgType: make(map[string][]reflect.Type),

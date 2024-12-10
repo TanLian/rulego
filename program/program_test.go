@@ -1,6 +1,7 @@
 package program
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -159,18 +160,6 @@ c = 3;
 bbb();
 `
 
-var input5 = `
-fn max(a,b) {
-	if a > b {
-		a
-	} else {
-		b
-	}
-}
-
-println(max(3,5));
-`
-
 var testPrecedence = `
 println(5 + 3 & 6); // 0
 println(5 & 3 + 6); // 1
@@ -214,28 +203,66 @@ println(p1.get_name());
 p1.set_name("leo2");
 println(p1.get_name());
 
-p2 = person{"name":"george"};
+p2 = person{name:"george"};
 println(p2.get_name());
 `
 
-var input6 = `
-a = 1;
-b = [];
-if a == 1 {
-	b.Push(1);
+var input5 = `
+struct person {
+	age,
+	name,
 }
+
+a = [person{1,"leo"}, person{2,"george"}];
+b = a[0].name;
 println(b);
+
+fn aaa() {
+	return person{age:100};
+}
+c = aaa();
+println(c.age);
+`
+
+var input6 = `
+a = 3;
+switch a {
+case 1:
+	println("1");
+case 2:
+	println("2");
+default:
+	println("default");
+}
 `
 
 // TODO:
 /*
-1. 去掉panic，改成return error
-2. 报错行号支持
+1. 去掉panic，改成return error  done
+2. 报错行号支持 done
+3. 支持打印AST
 */
 
 func TestProgram_Run(t *testing.T) {
 	p := New()
 	p.Run(input6)
+}
+
+func TestProgram_RunAll(t *testing.T) {
+	tests := []string{
+		bubbleSort, testReverseString, testPlusPlus,
+		testFor, testVar, testIfElse, testSwitch,
+		testInlineComments, testFib, testMap, testSlice,
+		testContinue, testMinusMinus, testPlusAssign,
+		testMinusAssign, input4, testPrecedence, testStruct,
+		input5, input6}
+	for i, v := range tests {
+		p := New()
+		if err := p.Run(v); err != nil {
+			fmt.Println("err: ", err, " i: ", i)
+			break
+		}
+	}
 }
 
 var testReverseString = `

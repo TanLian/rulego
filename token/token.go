@@ -73,6 +73,8 @@ const (
 type Token struct {
 	Type  TokenType
 	Value string
+	Row   int
+	Col   int
 }
 
 func (t Token) String() string {

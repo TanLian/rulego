@@ -18,14 +18,14 @@ func New() *Program {
 	return &Program{env: environment.Root}
 }
 
-func (p *Program) Run(input string) {
+func (p *Program) Run(input string) error {
 	log.SetFlags(0)
 	l := lexer.New(input)
 	ps := parser.NewParser(l, p.env)
 	states, err := ps.Parse()
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 	for _, v := range states {
 		obj, _ := v.Exec(p.env)
@@ -33,6 +33,7 @@ func (p *Program) Run(input string) {
 			log.Println(obj.GetValue())
 		}
 	}
+	return nil
 }
 
 func (p *Program) SetRepl(repl bool) {

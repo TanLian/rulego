@@ -2,21 +2,23 @@ package token
 
 // 优先级定义，数字越低优先级越低
 const (
-	PrecedenceLowest         int = iota
-	PrecedenceAssign             // =
-	PrecedenceLogicOr            // ||
-	PrecedenceLogicAnd           // &&
-	PrecedenceCompare            // > or <
-	PrecedenceBitwiseOr          // |
-	PrecedenceBitwiseXor         // ^
-	PrecedenceBitwiseAnd         // &
-	PrecedenceBitShift           // << or >>
-	PrecedenceAddMinus           // + or -
-	PrecedenceMultiplyDivide     // * or /
-	PrecedencePrefix             // -X or !X
-	PrecedencePower              // **
-	PrecedenceCall               // myFunction(X)
-	PrecedenceIndex              // array[index]
+	PrecedenceLowest     int = iota
+	PrecedenceAssign         // =
+	PrecedenceStructInit     // struct init, egg: myStruct{filed:val}
+	PrecedencePlaceholder
+	PrecedenceLogicOr        // ||
+	PrecedenceLogicAnd       // &&
+	PrecedenceCompare        // > or <
+	PrecedenceBitwiseOr      // |
+	PrecedenceBitwiseXor     // ^
+	PrecedenceBitwiseAnd     // &
+	PrecedenceBitShift       // << or >>
+	PrecedenceAddMinus       // + or -
+	PrecedenceMultiplyDivide // * or /
+	PrecedencePrefix         // -X or !X
+	PrecedencePower          // **
+	PrecedenceCall           // myFunction(X)
+	PrecedenceIndex          // array[index]
 )
 
 var Precedences = map[TokenType]int{
@@ -42,7 +44,7 @@ var Precedences = map[TokenType]int{
 	POWER:       PrecedencePower,
 	LBRACKET:    PrecedenceIndex,
 	DOT:         PrecedenceIndex,
-	LBRACE:      PrecedenceIndex,
+	LBRACE:      PrecedenceStructInit,
 }
 
 func GetPrecedence(t TokenType) int {

@@ -31,7 +31,7 @@ func (p *Dot) Eval(env *environment.Environment) object.Object {
 	}
 	//fmt.Println(p.Left.String())
 	left := p.Left.Eval(env)
-	// fmt.Println("leftObj: ", leftObj.GetValue(), " type: ", leftObj.Type())
+	//fmt.Println("in dot leftObj: ", left.GetValue(), " type: ", left.Type())
 	if structObj, ok := left.(*object.Struct); ok {
 		stt := structObj.Value
 		if stt.Kind() == reflect.Pointer {

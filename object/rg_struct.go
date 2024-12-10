@@ -36,6 +36,24 @@ func (rs *RgStruct) Call(name string, args []Object) Object {
 	return m.Call(args)
 }
 
+func (rs *RgStruct) Clone() *RgStruct {
+	res := &RgStruct{
+		Name:    rs.Name,
+		Methods: make(map[string]Method),
+		Values:  make(map[string]Object),
+	}
+	for _, v := range rs.Fields {
+		res.Fields = append(res.Fields, v)
+	}
+	for k, v := range rs.Methods {
+		res.Methods[k] = v
+	}
+	for k, v := range rs.Values {
+		res.Values[k] = v
+	}
+	return res
+}
+
 func (rs *RgStruct) object() {}
 
 func (rs *RgStruct) Type() Type {
@@ -43,5 +61,5 @@ func (rs *RgStruct) Type() Type {
 }
 
 func (rs *RgStruct) GetValue() any {
-	return nil
+	return rs
 }

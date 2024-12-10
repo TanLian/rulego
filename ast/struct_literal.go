@@ -41,18 +41,18 @@ p2 = person{age: 2};
 */
 
 type RgStructInstantiate struct {
-	Struct Expression
+	Ident  Expression
 	Values []Expression
 	KV     map[Expression]Expression
 }
 
 func (rsi *RgStructInstantiate) Eval(env *environment.Environment) object.Object {
-	obj := rsi.Struct.Eval(env)
+	obj := rsi.Ident.Eval(env)
 	rs, ok := obj.(*object.RgStruct)
 	if !ok {
-		fmt.Println("......hhhh....")
-		panic("not a struct ")
+		panic("not a struct")
 	}
+	rs = rs.Clone()
 
 	if len(rsi.Values) > 0 {
 		if len(rs.Fields) != len(rsi.Values) {
@@ -65,11 +65,11 @@ func (rsi *RgStructInstantiate) Eval(env *environment.Environment) object.Object
 
 	if len(rsi.KV) > 0 {
 		for k, v := range rsi.KV {
-			kk := k.Eval(env).GetValue()
-			field, ok := kk.(string)
+			ident, ok := k.(*Ident)
 			if !ok {
-				panic("key must be string")
+				panic("key must be ident")
 			}
+			field := ident.Token.Value
 
 			if !rs.CheckFieldExist(field) {
 				panic(fmt.Sprintf("field %s not exist in struct %s", field, rs.Name))

@@ -15,7 +15,11 @@ type Expression struct {
 func NewExpression(input string) *Expression {
 	l := lexer.New(input)
 	p := parser.NewParser(l, nil)
-	return &Expression{exp: p.ParseExpression(token.PrecedenceLowest)}
+	expr, err := p.ParseExpression(token.PrecedenceLowest)
+	if err != nil {
+		panic(err)
+	}
+	return &Expression{exp: expr}
 }
 
 func (exp *Expression) Eval(data any) any {

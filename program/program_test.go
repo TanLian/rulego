@@ -192,10 +192,46 @@ println(1<<3&77); // 8
 println(1+2<<5); // 96
 `
 
-var input6 = `
-a = 10 >> 2;
-println(if 1 == 0 {3} else {4});
+var testStruct = `
+struct person {
+	age,
+	name,
+}
+
+impl person {
+	fn get_name(self) {
+		self.name
+	}
+
+	fn set_name(self, name) {
+		self.name = name;
+	}
+}
+
+p1 = person{1,"leo"};
+println(p1.get_name());
+
+p1.set_name("leo2");
+println(p1.get_name());
+
+p2 = person{"name":"george"};
+println(p2.get_name());
 `
+
+var input6 = `
+a = 1;
+b = [];
+if a == 1 {
+	b.Push(1);
+}
+println(b);
+`
+
+// TODO:
+/*
+1. 去掉panic，改成return error
+2. 报错行号支持
+*/
 
 func TestProgram_Run(t *testing.T) {
 	p := New()
@@ -252,7 +288,7 @@ if expr {
 }
 */
 var testIfElse = `
-	a = 9;
+	a = 21;
 	if a > 20 {
 		println("greater than 20");
 	} else if a >= 10 {

@@ -65,6 +65,11 @@ func (as *Assign) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 				s.SetField(dotRight.Token.Value, as.Right.Eval(env).GetValue())
 			}
 		}
+		if s, ok := dotLeft.(*object.RgStruct); ok {
+			if dotRight, ok := dot.Right.(*Ident); ok {
+				s.SetFieldValue(dotRight.Token.Value, as.Right.Eval(env))
+			}
+		}
 		return object.Null, 0
 	}
 	panic("invalid assign statement")

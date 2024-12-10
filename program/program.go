@@ -1,14 +1,11 @@
 package program
 
 import (
-	"fmt"
-
-	"github.com/tanlian/rulego/object"
-
-	"github.com/tanlian/rulego/ast"
+	"log"
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/lexer"
+	"github.com/tanlian/rulego/object"
 	"github.com/tanlian/rulego/parser"
 )
 
@@ -22,17 +19,19 @@ func New() *Program {
 }
 
 func (p *Program) Run(input string) {
+	log.SetFlags(0)
 	l := lexer.New(input)
 	ps := parser.NewParser(l, p.env)
-	states := ps.Parse()
+	states, err := ps.Parse()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	for _, v := range states {
-		if expr, ok := v.(*ast.ExpressionStatement); p.repl && ok {
-			if obj := expr.Expr.Eval(p.env); obj != object.Null {
-				fmt.Println(obj.GetValue())
-			}
-			continue
+		obj, _ := v.Exec(p.env)
+		if p.repl && obj != object.Null {
+			log.Println(obj.GetValue())
 		}
-		v.Exec(p.env)
 	}
 }
 

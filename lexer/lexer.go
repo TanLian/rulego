@@ -187,34 +187,10 @@ func (l *Lexer) eatIdent() token.Token {
 	}
 	l.position--
 	str := s.String()
-	switch str {
-	case "true", "false":
-		return token.Token{Type: token.BOOL, Value: str}
-	case "if":
-		return token.Token{Type: token.IF, Value: str}
-	case "else":
-		return token.Token{Type: token.ELSE, Value: str}
-	case "fn":
-		return token.Token{Type: token.FUNC, Value: str}
-	case "rule":
-		return token.Token{Type: token.RULE, Value: str}
-	case "return":
-		return token.Token{Type: token.RETURN, Value: str}
-	case "for":
-		return token.Token{Type: token.FOR, Value: str}
-	case "break":
-		return token.Token{Type: token.BREAK, Value: str}
-	case "continue":
-		return token.Token{Type: token.CONTINUE, Value: str}
-	case "switch":
-		return token.Token{Type: token.SWITCH, Value: str}
-	case "case":
-		return token.Token{Type: token.CASE, Value: str}
-	case "default":
-		return token.Token{Type: token.DEFAULT, Value: str}
-	default:
-		return token.Token{Type: token.IDENTIFIER, Value: s.String()}
+	if typ, ok := token.Keyword[str]; ok {
+		return token.Token{Type: typ, Value: str}
 	}
+	return token.Token{Type: token.IDENTIFIER, Value: str}
 }
 
 func (l *Lexer) currentChar() byte {

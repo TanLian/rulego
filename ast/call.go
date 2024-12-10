@@ -74,6 +74,10 @@ func (c *Call) Eval(env *environment.Environment) object.Object {
 			}
 			return object.Null
 		}
+
+		if obj, ok := dotLeft.(*object.RgStruct); ok {
+			return obj.Call(dotRight.Token.Value, append([]object.Object{obj}, inObj...))
+		}
 		v := reflect.ValueOf(dotLeft)
 		method := v.MethodByName(dotRight.Token.Value)
 		out, _ := c.MethodCall(method, in)

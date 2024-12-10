@@ -40,46 +40,20 @@ func (f *If) expressionNode() {}
 func (f *If) statementNode() {}
 
 func (f *If) Eval(env *environment.Environment) object.Object {
-	for _, exprStates := range f.Ifs {
-		if object.TransToBool(exprStates.Expr.Eval(env)) {
-			childEnv := environment.New(env)
-			for i, v := range exprStates.States {
-				// the last statement, if it is an expression
-				if i == len(exprStates.States)-1 {
-					if expr, ok := v.(*ExpressionStatement); ok {
-						return expr.Expr.Eval(childEnv)
-					}
-				}
-
-				if obj, flg := v.Exec(childEnv); flg&RETURN != 0 {
-					return obj
-				}
-			}
-		}
-	}
-
-	childEnv := environment.New(env)
-	for i, v := range f.Else {
-		if i == len(f.Else)-1 {
-			if expr, ok := v.(*ExpressionStatement); ok {
-				return expr.Expr.Eval(childEnv)
-			}
-		}
-
-		if obj, flg := v.Exec(childEnv); flg&RETURN != 0 {
-			return obj
-		}
-	}
-	return object.Null
+	res, _ := f.Exec(env)
+	return res
 }
 
 func (f *If) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 	for _, exprStates := range f.Ifs {
 		if object.TransToBool(exprStates.Expr.Eval(env)) {
 			childEnv := environment.New(env)
-			for _, v := range exprStates.States {
-				obj, flg := v.Exec(childEnv)
-				if flg&RETURN != 0 || flg&BREAK != 0 || flg&CONTINUE != 0 {
+			for i, v := range exprStates.States {
+				if i == len(exprStates.States)-1 {
+					return v.Exec(childEnv)
+				}
+
+				if obj, flg := v.Exec(childEnv); flg&RETURN != 0 || flg&BREAK != 0 || flg&CONTINUE != 0 {
 					return obj, flg
 				}
 			}
@@ -88,9 +62,12 @@ func (f *If) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 	}
 
 	childEnv := environment.New(env)
-	for _, v := range f.Else {
-		obj, flg := v.Exec(childEnv)
-		if flg&RETURN != 0 || flg&BREAK != 0 || flg&CONTINUE != 0 {
+	for i, v := range f.Else {
+		if i == len(f.Else)-1 {
+			return v.Exec(childEnv)
+		}
+
+		if obj, flg := v.Exec(childEnv); flg&RETURN != 0 || flg&BREAK != 0 || flg&CONTINUE != 0 {
 			return obj, flg
 		}
 	}

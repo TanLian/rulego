@@ -42,6 +42,10 @@ func (p *Dot) Eval(env *environment.Environment) object.Object {
 			return object.ToObject(val)
 		}
 	}
+
+	if structObj, ok := left.(*object.RgStruct); ok {
+		return structObj.GetFieldValue(right.Token.Value)
+	}
 	return object.Null
 }
 

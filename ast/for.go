@@ -24,7 +24,8 @@ func (f *For) statementNode() {}
 func (f *For) expressionNode() {}
 
 func (f *For) Eval(env *environment.Environment) object.Object {
-	return object.Null
+	res, _ := f.Exec(env)
+	return res
 }
 
 func (f *For) Exec(env *environment.Environment) (object.Object, ExecFlag) {

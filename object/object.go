@@ -18,6 +18,7 @@ const (
 	TypeRune
 	TypeStruct
 	TypeMapPointer
+	TypeRgStruct
 )
 
 type Object interface {

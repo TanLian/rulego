@@ -31,9 +31,8 @@ func (fl *FnLiteralObj) Call(args []object.Object) object.Object {
 	}
 	for i, v := range fl.Statements {
 		if i == len(fl.Statements)-1 {
-			if expr, ok := v.(*ExpressionStatement); ok {
-				return expr.Expr.Eval(env)
-			}
+			obj, _ := v.Exec(env)
+			return obj
 		}
 
 		if obj, flg := v.Exec(env); flg&RETURN != 0 {

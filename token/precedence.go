@@ -42,6 +42,7 @@ var Precedences = map[TokenType]int{
 	POWER:       PrecedencePower,
 	LBRACKET:    PrecedenceIndex,
 	DOT:         PrecedenceIndex,
+	LBRACE:      PrecedenceIndex,
 }
 
 func GetPrecedence(t TokenType) int {

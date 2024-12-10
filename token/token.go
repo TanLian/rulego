@@ -26,6 +26,8 @@ const (
 	NUMBER // 数字
 	BOOL
 	STRING
+	STRUCT
+	IMPL
 
 	// 标点符号
 	DOT       // .
@@ -92,6 +94,8 @@ func (t Token) String() string {
 		NUMBER:          "number",
 		BOOL:            "bool",
 		STRING:          "string",
+		STRUCT:          "struct",
+		IMPL:            "impl",
 		DOT:             "dot",
 		SEMICOLON:       "semicolon",
 		COMMA:           "comma",
@@ -128,4 +132,24 @@ func (t Token) String() string {
 var (
 	InvalidToken = Token{Type: Invalid}
 	EofToken     = Token{Type: EOF}
+)
+
+var (
+	Keyword = map[string]TokenType{
+		"true":     BOOL,
+		"false":    BOOL,
+		"if":       IF,
+		"else":     ELSE,
+		"fn":       FUNC,
+		"rule":     RULE,
+		"return":   RETURN,
+		"for":      FOR,
+		"break":    BREAK,
+		"continue": CONTINUE,
+		"switch":   SWITCH,
+		"case":     CASE,
+		"default":  DEFAULT,
+		"struct":   STRUCT,
+		"impl":     IMPL,
+	}
 )

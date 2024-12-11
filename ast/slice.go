@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/tanlian/rulego/environment"
@@ -46,6 +47,23 @@ func (se *Slice) String() string {
 	}
 	s.WriteString(strings.Join(str, ","))
 	s.WriteString("]")
+	return s.String()
+}
+
+func (se *Slice) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.Slice {\n")
+	if len(se.Data) > 0 {
+		for i, v := range se.Data {
+			s.WriteString(strings.Repeat(". ", num+1) + fmt.Sprint(i) + ": " + v.AST(num+1))
+		}
+	} else if se.InitExpr != nil && se.LenExpr != nil {
+		s.WriteString(strings.Repeat(". ", num+1) + " InitExpr: ")
+		s.WriteString(se.InitExpr.AST(num + 1))
+		s.WriteString(strings.Repeat(". ", num+1) + " LenExpr: ")
+		s.WriteString(se.LenExpr.AST(num + 1))
+	}
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
 	return s.String()
 }
 

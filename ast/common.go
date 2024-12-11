@@ -17,12 +17,14 @@ type Statement interface {
 	statementNode()
 	Exec(env *environment.Environment) (object.Object, ExecFlag)
 	String() string
+	AST(int) string
 }
 
 type Expression interface {
 	expressionNode()
 	Eval(env *environment.Environment) object.Object
 	String() string
+	AST(int) string
 }
 
 type ExpressionStatement struct {
@@ -40,4 +42,8 @@ func (es *ExpressionStatement) statementNode() {}
 
 func (es *ExpressionStatement) String() string {
 	return es.Expr.String()
+}
+
+func (es *ExpressionStatement) AST(num int) string {
+	return es.Expr.AST(num)
 }

@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"fmt"
+
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
 	"github.com/tanlian/rulego/token"
@@ -13,6 +15,10 @@ type String struct {
 
 func (be *String) Eval(env *environment.Environment) object.Object {
 	return be.Value
+}
+
+func (be *String) AST(num int) string {
+	return fmt.Sprintf("*ast.String { %s }\n", string(be.Value.Val))
 }
 
 func (be *String) String() string {

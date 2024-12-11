@@ -1,6 +1,9 @@
 package ast
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
 )
@@ -55,4 +58,28 @@ func (s *Switch) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 
 func (s *Switch) String() string {
 	return ""
+}
+
+func (s *Switch) AST(num int) string {
+	var ss strings.Builder
+	ss.WriteString("*ast.Switch {\n")
+	ss.WriteString(strings.Repeat(". ", num+1) + " Expr: " + s.Expr.AST(num+1))
+	for _, v := range s.Cases {
+		ss.WriteString(strings.Repeat(". ", num+1) + " Case: " + v.Expr.AST(num+2))
+		ss.WriteString(strings.Repeat(". ", num+2) + " Statements: {\n")
+		for i, vv := range v.States {
+			ss.WriteString(strings.Repeat(". ", num+3) + fmt.Sprintf("%d: ", i) + vv.AST(num+3))
+		}
+		ss.WriteString(strings.Repeat(". ", num+2) + " }\n")
+	}
+	if len(s.Default) > 0 {
+		ss.WriteString(strings.Repeat(". ", num+1) + " Default: \n")
+		ss.WriteString(strings.Repeat(". ", num+2) + " Statements: {\n")
+		for i, v := range s.Default {
+			ss.WriteString(strings.Repeat(". ", num+3) + fmt.Sprintf("%d: ", i) + v.AST(num+3))
+		}
+		ss.WriteString(strings.Repeat(". ", num+2) + " }\n")
+	}
+	ss.WriteString(strings.Repeat(". ", num+1) + " }\n")
+	return ss.String()
 }

@@ -30,4 +30,17 @@ func (m *Map) String() string {
 	return s.String()
 }
 
+func (m *Map) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.Map {\n")
+	for k, v := range m.KV {
+		s.WriteString(strings.Repeat(". ", num+1) + " Key: ")
+		s.WriteString(k.AST(num + 1))
+		s.WriteString(strings.Repeat(". ", num+1) + " Value: ")
+		s.WriteString(v.AST(num + 1))
+	}
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
+}
+
 func (m *Map) expressionNode() {}

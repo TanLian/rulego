@@ -25,4 +25,8 @@ func (ie *Ident) String() string {
 	return ie.Token.String()
 }
 
+func (ie *Ident) AST(num int) string {
+	return fmt.Sprintf("*ast.Ident { %s }\n", ie.Token.Value)
+}
+
 func (ie *Ident) expressionNode() {}

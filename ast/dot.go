@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
@@ -51,6 +52,17 @@ func (p *Dot) Eval(env *environment.Environment) object.Object {
 
 func (p *Dot) String() string {
 	return fmt.Sprintf("(%s.%s)", p.Left.String(), p.Right.String())
+}
+
+func (p *Dot) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.Dot {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Left: ")
+	s.WriteString(p.Left.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num+1) + " Right: ")
+	s.WriteString(p.Right.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
 }
 
 func (p *Dot) expressionNode() {}

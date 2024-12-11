@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/tanlian/rulego/environment"
@@ -30,5 +31,15 @@ func (b *Block) String() string {
 		s.WriteString(v.String() + "\r\n")
 	}
 	s.WriteString("}")
+	return s.String()
+}
+
+func (b *Block) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.Block {\n")
+	for i, v := range b.States {
+		s.WriteString(strings.Repeat(". ", num+1) + " " + strconv.Itoa(i) + ": " + v.AST(num+1) + "\n")
+	}
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
 	return s.String()
 }

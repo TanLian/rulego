@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/tanlian/rulego/environment"
@@ -25,7 +26,7 @@ func (fl *FnLiteralObj) Call(args []object.Object) object.Object {
 		panic("the length of parameters is not equal")
 	}
 
-	env := environment.New(environment.Root)
+	env := environment.New(environment.Root) // TODO: 这个env是从新定义还是从参数传递进来？
 	for i := 0; i < len(fl.Args); i++ {
 		env.SetCurrent(fl.Args[i], args[i])
 	}
@@ -51,6 +52,20 @@ func (fl *FnLiteralObj) String() string {
 		s.WriteString(v.String() + ";")
 	}
 	s.WriteString("}")
+	return s.String()
+}
+
+func (fl *FnLiteralObj) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.FnLiteralObj {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Name: " + fl.Name + "\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Args: (" + strings.Join(fl.Args, ",") + ")\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Statements: {\n")
+	for i, v := range fl.Statements {
+		s.WriteString(strings.Repeat(". ", num+2) + strconv.Itoa(i) + ": " + v.AST(num+2))
+	}
+	s.WriteString(strings.Repeat(". ", num+1) + " }\n")
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
 	return s.String()
 }
 

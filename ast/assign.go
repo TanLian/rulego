@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
@@ -82,6 +83,17 @@ func (as *Assign) Eval(env *environment.Environment) object.Object {
 
 func (as *Assign) String() string {
 	return fmt.Sprintf("%s = %s", as.Left.String(), as.Right.String())
+}
+
+func (as *Assign) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.Assign {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Left: ")
+	s.WriteString(as.Left.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num+1) + " Right: ")
+	s.WriteString(as.Right.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
 }
 
 func (as *Assign) statementNode() {}

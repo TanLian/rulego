@@ -154,3 +154,10 @@ func TestAnd(t *testing.T) {
 		})
 	}
 }
+
+func TestExpressionAST(t *testing.T) {
+	input := `
+a = 5;
+`
+	t.Log(NewExpression(input).AST())
+}

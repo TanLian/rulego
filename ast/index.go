@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
@@ -63,6 +64,21 @@ func (idx *Index) Eval(env *environment.Environment) object.Object {
 
 func (idx *Index) String() string {
 	return fmt.Sprintf("%s[%s]", idx.Data.String(), idx.Key.String())
+}
+
+func (idx *Index) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.Index {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Data: ")
+	s.WriteString(idx.Data.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num+1) + " Key: ")
+	s.WriteString(idx.Key.AST(num + 1))
+	if idx.End != nil {
+		s.WriteString(strings.Repeat(". ", num+1) + " End: ")
+		s.WriteString(idx.End.AST(num + 1))
+	}
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
 }
 
 func (idx *Index) expressionNode() {}

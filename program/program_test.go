@@ -225,22 +225,22 @@ println(c.age);
 `
 
 var input6 = `
-a = 3;
-switch a {
-case 1:
-	println("1");
-case 2:
-	println("2");
-default:
-	println("default");
+fn fib(n) {
+	if n < 2 {
+		return 1;
+	}
+	return fib(n-1) + fib(n-2);
 }
+
+a = fib(10);
+println(a);
 `
 
 // TODO:
 /*
 1. 去掉panic，改成return error  done
 2. 报错行号支持 done
-3. 支持打印AST
+3. 支持打印AST done
 */
 
 func TestProgram_Run(t *testing.T) {
@@ -263,6 +263,16 @@ func TestProgram_RunAll(t *testing.T) {
 			break
 		}
 	}
+}
+
+func TestProgramAST_Run(t *testing.T) {
+	input := `
+a = 10;
+a += 6;
+println(a);
+`
+	p := New()
+	fmt.Println(p.AST(input))
 }
 
 var testReverseString = `

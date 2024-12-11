@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
@@ -40,6 +41,17 @@ func (m *Mod) Eval(env *environment.Environment) object.Object {
 
 func (m *Mod) String() string {
 	return fmt.Sprintf("(%s % %s)", m.Left.String(), m.Right.String())
+}
+
+func (m *Mod) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.Mod {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Left: ")
+	s.WriteString(m.Left.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num+1) + " Right: ")
+	s.WriteString(m.Right.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
 }
 
 func (m *Mod) expressionNode() {}

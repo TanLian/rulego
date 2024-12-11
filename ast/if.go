@@ -1,6 +1,9 @@
 package ast
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
 )
@@ -72,6 +75,27 @@ func (f *If) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 		}
 	}
 	return object.Null, 0
+}
+
+func (f *If) AST(num int) string {
+	var s strings.Builder
+	s.WriteString(strings.Repeat(". ", num+1) + " *ast.If {\n")
+	for _, v := range f.Ifs {
+		s.WriteString(strings.Repeat(". ", num+2) + " Condition: " + v.Expr.AST(num+2))
+		s.WriteString(strings.Repeat(". ", num+2) + " Statements: {\n")
+		for i, vv := range v.States {
+			s.WriteString(strings.Repeat(". ", num+3) + fmt.Sprintf(" %d: %s", i, vv.AST(num+3)))
+		}
+		s.WriteString(strings.Repeat(". ", num+2) + " }\n")
+	}
+	if len(f.Else) > 0 {
+		s.WriteString(strings.Repeat(". ", num+2) + " Else: {\n")
+		for i, v := range f.Else {
+			s.WriteString(strings.Repeat(". ", num+3) + fmt.Sprintf(" %d: %s", i, v.AST(num+3)))
+		}
+		s.WriteString(strings.Repeat(". ", num+2) + " }\n")
+	}
+	return s.String()
 }
 
 func (f *If) String() string {

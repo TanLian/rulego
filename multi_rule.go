@@ -1,6 +1,7 @@
 package rulego
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/tanlian/rulego/ast"
@@ -10,7 +11,7 @@ import (
 )
 
 type MultiRule struct {
-	parentEnv *environment.Environment
+	env *environment.Environment
 }
 
 func NewMultiRule(input string) *MultiRule {
@@ -25,11 +26,12 @@ func NewMultiRule(input string) *MultiRule {
 	for _, v := range states {
 		v.Exec(env)
 	}
-	return &MultiRule{parentEnv: env}
+	fmt.Println("... env: ", env)
+	return &MultiRule{env: env}
 }
 
-func (mr *MultiRule) ExecuteOne(name string, env *environment.Environment) any {
-	obj, ok := mr.parentEnv.Get(name)
+func (mr *MultiRule) ExecuteOne(name string) any {
+	obj, ok := mr.env.Get(name)
 	if !ok {
 		return nil
 	}
@@ -37,34 +39,34 @@ func (mr *MultiRule) ExecuteOne(name string, env *environment.Environment) any {
 	if !ok {
 		return nil
 	}
-	return r.Call(env).GetValue()
+	return r.Call(mr.env).GetValue()
 }
 
-func (mr *MultiRule) ExecuteOneByOne(names []string, env *environment.Environment) []any {
+func (mr *MultiRule) ExecuteOneByOne(names []string) []any {
 	var res []any
 	for _, v := range names {
-		res = append(res, mr.ExecuteOne(v, env))
+		res = append(res, mr.ExecuteOne(v))
 	}
 	return res
 }
 
 func (mr *MultiRule) GetEnv() *environment.Environment {
-	return mr.parentEnv
+	return mr.env
 }
 
 func (mr *MultiRule) Upsert(content string) {
 	l := lexer.New(content)
-	p := parser.NewParser(l, mr.parentEnv)
+	p := parser.NewParser(l, mr.env)
 	states, err := p.Parse()
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	for _, v := range states {
-		v.Exec(mr.parentEnv)
+		v.Exec(mr.env)
 	}
 }
 
 func (mr *MultiRule) Remove(name string) {
-	mr.parentEnv.Remove(name)
+	mr.env.Remove(name)
 }

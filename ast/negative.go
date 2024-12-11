@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
@@ -24,6 +25,15 @@ func (b *Negative) Eval(env *environment.Environment) object.Object {
 
 func (b *Negative) String() string {
 	return fmt.Sprintf("-%s", b.Expr.String())
+}
+
+func (b *Negative) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.Negative {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Expr: ")
+	s.WriteString(b.Expr.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
 }
 
 func (b *Negative) expressionNode() {}

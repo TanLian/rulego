@@ -13,7 +13,10 @@ import (
 func NewRule(input string) *Rule {
 	l := lexer.New(input)
 	p := parser.NewParser(l, nil)
-	exp := p.ParseExpression(token.PrecedenceLowest)
+	exp, err := p.ParseExpression(token.PrecedenceLowest)
+	if err != nil {
+		panic(err)
+	}
 	r, ok := exp.(*ast.Rule)
 	if !ok {
 		panic("invalid rule")

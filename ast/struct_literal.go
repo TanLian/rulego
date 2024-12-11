@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
@@ -34,6 +35,17 @@ func (rs *StructLiteral) String() string {
 }
 
 func (rs *StructLiteral) expressionNode() {}
+
+func (rs *StructLiteral) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.StructLiteral {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Name: " + rs.Name + "\n")
+	for i, v := range rs.Fields {
+		s.WriteString(strings.Repeat(". ", num+1) + fmt.Sprintf(" Field %d: ", i) + v + "\n")
+	}
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
+}
 
 /*
 p1 = person{1,"leo"};
@@ -82,6 +94,24 @@ func (rsi *RgStructInstantiate) Eval(env *environment.Environment) object.Object
 
 func (rsi *RgStructInstantiate) String() string {
 	return ""
+}
+
+func (rsi *RgStructInstantiate) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.RgStructInstantiate {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Ident: " + rsi.Ident.AST(num+1))
+	if len(rsi.Values) > 0 {
+		for i, v := range rsi.Values {
+			s.WriteString(strings.Repeat(". ", num+1) + fmt.Sprintf(" Values %d: ", i) + v.AST(num+1))
+		}
+	} else {
+		for k, v := range rsi.KV {
+			s.WriteString(strings.Repeat(". ", num+1) + fmt.Sprintf(" Key: %s", k.AST(num+1)))
+			s.WriteString(strings.Repeat(". ", num+1) + fmt.Sprintf(" Value: %s", v.AST(num+1)))
+		}
+	}
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
 }
 
 func (rsi *RgStructInstantiate) expressionNode() {}

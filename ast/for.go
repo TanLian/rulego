@@ -1,6 +1,9 @@
 package ast
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
 )
@@ -48,6 +51,22 @@ func (f *For) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 	}
 end:
 	return object.Null, 0
+}
+
+func (f *For) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.For {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Initial: ")
+	s.WriteString(f.Initial.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num+1) + " Condition: ")
+	s.WriteString(f.Condition.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num+1) + " Post: ")
+	s.WriteString(f.Post.AST(num + 1))
+	for i, v := range f.Statements {
+		s.WriteString(strings.Repeat(". ", num+1) + " Statements[" + strconv.Itoa(i) + "]: " + v.AST(0))
+	}
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
 }
 
 func (f *For) String() string {

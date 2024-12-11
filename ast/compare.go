@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
@@ -83,6 +84,37 @@ func (c *Compare) String() string {
 		return fmt.Sprintf("%s <= %s", c.Left.String(), c.Right.String())
 	case CompareNotEqual:
 		return fmt.Sprintf("%s != %s", c.Left.String(), c.Right.String())
+	default:
+		return ""
+	}
+}
+
+func (c *Compare) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.Compare {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Left: ")
+	s.WriteString(c.Left.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num+1) + " Right: ")
+	s.WriteString(c.Right.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num+1) + " Flag: " + c.fmtCompareFlag() + "\n")
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
+}
+
+func (c *Compare) fmtCompareFlag() string {
+	switch c.Flag {
+	case CompareGreaterThan:
+		return ">"
+	case CompareGreaterEqual:
+		return ">="
+	case CompareEqual:
+		return "=="
+	case CompareLessThan:
+		return "<"
+	case CompareLessEqual:
+		return "<="
+	case CompareNotEqual:
+		return "!="
 	default:
 		return ""
 	}

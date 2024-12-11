@@ -3,6 +3,7 @@ package ast
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/tanlian/rulego/builtin"
 
@@ -28,7 +29,7 @@ func (c *Call) Eval(env *environment.Environment) object.Object {
 	}
 
 	if fn, ok := c.Left.(*Ident); ok {
-		//fmt.Println("env: ", env)
+		// fmt.Println("env: ", env, " fn: ", fn.Token.Value)
 		// 优先使用用户自定义的函数
 		if obj, ok := env.Get(fn.Token.Value); ok {
 			if fnLiteral, ok := obj.(*FnLiteralObj); ok {
@@ -88,6 +89,17 @@ func (c *Call) Eval(env *environment.Environment) object.Object {
 
 func (c *Call) String() string {
 	return fmt.Sprintf("%s(%s)", c.Left.String(), c.Arguments.String())
+}
+
+func (c *Call) AST(num int) string {
+	var s strings.Builder
+	s.WriteString("*ast.Call {\n")
+	s.WriteString(strings.Repeat(". ", num+1) + " Left: ")
+	s.WriteString(c.Left.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num+1) + " Arguments: ")
+	s.WriteString(c.Arguments.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num) + " }\n")
+	return s.String()
 }
 
 func (c *Call) expressionNode() {}

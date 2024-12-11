@@ -30,6 +30,10 @@ func (rl *Rule) Call(env *environment.Environment) object.Object {
 	return object.Null
 }
 
+func (rl *Rule) AST(num int) string { // TODO
+	return ""
+}
+
 func (rl *Rule) String() string {
 	var s strings.Builder
 	s.WriteString("rule ")

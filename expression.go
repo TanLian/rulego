@@ -26,12 +26,16 @@ func (exp *Expression) Eval(data any) any {
 	if env, ok := data.(*environment.Environment); ok {
 		return exp.exp.Eval(env).GetValue()
 	}
+
+	env := environment.New(environment.Root)
 	if kv, ok := data.(map[string]any); ok {
-		env := environment.New(environment.Root)
 		for k, v := range kv {
 			env.Inject(k, v)
 		}
-		return exp.exp.Eval(env).GetValue()
 	}
-	return nil
+	return exp.exp.Eval(env).GetValue()
+}
+
+func (exp *Expression) AST() string {
+	return exp.exp.AST(0)
 }

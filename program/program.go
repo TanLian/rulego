@@ -2,6 +2,7 @@ package program
 
 import (
 	"log"
+	"strings"
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/lexer"
@@ -38,4 +39,21 @@ func (p *Program) Run(input string) error {
 
 func (p *Program) SetRepl(repl bool) {
 	p.repl = repl
+}
+
+func (p *Program) AST(input string) string {
+	log.SetFlags(0)
+	l := lexer.New(input)
+	ps := parser.NewParser(l, p.env)
+	states, err := ps.Parse()
+	if err != nil {
+		log.Println(err)
+		panic(err)
+	}
+
+	var s strings.Builder
+	for _, v := range states {
+		s.WriteString(v.AST(0))
+	}
+	return s.String()
 }

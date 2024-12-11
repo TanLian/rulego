@@ -241,6 +241,7 @@ println(a);
 1. 去掉panic，改成return error  done
 2. 报错行号支持 done
 3. 支持打印AST done
+4. 去掉所有的panic，优化错误信息
 */
 
 func TestProgram_Run(t *testing.T) {

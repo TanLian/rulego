@@ -1,7 +1,6 @@
 package rulego
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/tanlian/rulego/ast"
@@ -16,17 +15,16 @@ type MultiRule struct {
 
 func NewMultiRule(input string) *MultiRule {
 	l := lexer.New(input)
-	env := environment.New(environment.Root)
-	p := parser.NewParser(l, env)
+	p := parser.NewParser(l)
 	states, err := p.Parse()
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
+	env := environment.Root
 	for _, v := range states {
 		v.Exec(env)
 	}
-	fmt.Println("... env: ", env)
 	return &MultiRule{env: env}
 }
 
@@ -56,7 +54,7 @@ func (mr *MultiRule) GetEnv() *environment.Environment {
 
 func (mr *MultiRule) Upsert(content string) {
 	l := lexer.New(content)
-	p := parser.NewParser(l, mr.env)
+	p := parser.NewParser(l)
 	states, err := p.Parse()
 	if err != nil {
 		log.Println(err)

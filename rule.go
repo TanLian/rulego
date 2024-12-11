@@ -12,7 +12,7 @@ import (
 
 func NewRule(input string) *Rule {
 	l := lexer.New(input)
-	p := parser.NewParser(l, nil)
+	p := parser.NewParser(l)
 	exp, err := p.ParseExpression(token.PrecedenceLowest)
 	if err != nil {
 		panic(err)

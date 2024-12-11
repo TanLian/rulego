@@ -22,7 +22,7 @@ func New() *Program {
 func (p *Program) Run(input string) error {
 	log.SetFlags(0)
 	l := lexer.New(input)
-	ps := parser.NewParser(l, p.env)
+	ps := parser.NewParser(l)
 	states, err := ps.Parse()
 	if err != nil {
 		log.Println(err)
@@ -44,7 +44,7 @@ func (p *Program) SetRepl(repl bool) {
 func (p *Program) AST(input string) string {
 	log.SetFlags(0)
 	l := lexer.New(input)
-	ps := parser.NewParser(l, p.env)
+	ps := parser.NewParser(l)
 	states, err := ps.Parse()
 	if err != nil {
 		log.Println(err)

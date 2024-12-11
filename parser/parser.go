@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/tanlian/rulego/ast"
-	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/lexer"
 	"github.com/tanlian/rulego/object"
 	"github.com/tanlian/rulego/token"
@@ -18,8 +17,7 @@ type (
 )
 
 type Parser struct {
-	l   *lexer.Lexer
-	env *environment.Environment
+	l *lexer.Lexer
 
 	prefixFn     map[token.TokenType]prefixParseFn
 	infixParseFn map[token.TokenType]infixParseFn
@@ -29,10 +27,9 @@ type Parser struct {
 	peekToken    token.Token
 }
 
-func NewParser(l *lexer.Lexer, env *environment.Environment) *Parser {
+func NewParser(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:            l,
-		env:          env,
 		prefixFn:     make(map[token.TokenType]prefixParseFn),
 		infixParseFn: make(map[token.TokenType]infixParseFn),
 	}

@@ -14,7 +14,7 @@ type Expression struct {
 
 func NewExpression(input string) *Expression {
 	l := lexer.New(input)
-	p := parser.NewParser(l, nil)
+	p := parser.NewParser(l)
 	expr, err := p.ParseExpression(token.PrecedenceLowest)
 	if err != nil {
 		panic(err)

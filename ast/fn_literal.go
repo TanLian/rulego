@@ -26,7 +26,7 @@ func (fl *FnLiteralObj) Call(args []object.Object) object.Object {
 		panic("the length of parameters is not equal")
 	}
 
-	env := environment.New(environment.Root) // TODO: 这个env是从新定义还是从参数传递进来？
+	env := environment.New(environment.Root)
 	for i := 0; i < len(fl.Args); i++ {
 		env.SetCurrent(fl.Args[i], args[i])
 	}

@@ -23,7 +23,6 @@ func (p *Divide) Eval(env *environment.Environment) object.Object {
 		if rightObj, ok := right.(*object.Float); ok {
 			return &object.Float{Val: float64(leftObj.Val) / rightObj.Val}
 		}
-		panic("invalid divide expression")
 	}
 
 	if leftObj, ok := left.(*object.Float); ok {
@@ -33,9 +32,8 @@ func (p *Divide) Eval(env *environment.Environment) object.Object {
 		if rightObj, ok := right.(*object.Float); ok {
 			return &object.Float{Val: leftObj.Val / rightObj.Val}
 		}
-		panic("invalid divide expression")
 	}
-	panic("invalid divide expression")
+	panic(fmt.Sprintf("TypeError: unsupported operand type(s) for /: '%s' and '%s'", left.Type(), right.Type()))
 }
 
 func (p *Divide) String() string {

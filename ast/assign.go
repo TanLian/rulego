@@ -61,19 +61,20 @@ func (as *Assign) Exec(env *environment.Environment) (object.Object, ExecFlag) {
 
 	if dot, ok := as.Left.(*Dot); ok {
 		dotLeft := dot.Left.Eval(env)
-		if s, ok := dotLeft.(*object.Struct); ok {
+		if s, ok := dotLeft.(*object.InjectStruct); ok {
 			if dotRight, ok := dot.Right.(*Ident); ok {
 				s.SetField(dotRight.Token.Value, as.Right.Eval(env).GetValue())
 			}
 		}
-		if s, ok := dotLeft.(*object.RgStruct); ok {
+		if s, ok := dotLeft.(*object.Struct); ok {
 			if dotRight, ok := dot.Right.(*Ident); ok {
 				s.SetFieldValue(dotRight.Token.Value, as.Right.Eval(env))
 			}
 		}
 		return object.Null, 0
 	}
-	panic("invalid assign statement")
+
+	panic(fmt.Sprintf("TypeError: cannot assign to %s", as.Left.Eval(env).Type()))
 }
 
 func (as *Assign) Eval(env *environment.Environment) object.Object {

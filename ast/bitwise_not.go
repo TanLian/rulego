@@ -17,7 +17,7 @@ func (b *BitwiseNot) Eval(env *environment.Environment) object.Object {
 	if intObj, ok := numObj.(*object.Int); ok {
 		return &object.Int{Val: ^intObj.Val}
 	}
-	panic("invalid ^ expression")
+	panic(fmt.Sprintf("TypeError: invalid operand for bitwise not(^): %s", numObj.Type()))
 }
 
 func (b *BitwiseNot) String() string {

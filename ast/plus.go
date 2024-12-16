@@ -26,7 +26,7 @@ func (p *Plus) Eval(env *environment.Environment) object.Object {
 		if right.Type() == object.TypeUndefined {
 			return &object.Int{Val: leftObj.Val}
 		}
-		panic("invalid plus expression")
+		panic(fmt.Sprintf("TypeError: unsuported operand type for +: %s and %s", left.Type(), right.Type()))
 	}
 
 	if leftObj, ok := left.(*object.Float); ok {
@@ -39,7 +39,7 @@ func (p *Plus) Eval(env *environment.Environment) object.Object {
 		if right.Type() == object.TypeUndefined {
 			return &object.Float{Val: leftObj.Val}
 		}
-		panic("invalid plus expression")
+		panic(fmt.Sprintf("TypeError: unsuported operand type for +: %s and %s", left.Type(), right.Type()))
 	}
 
 	if leftObj, ok := left.(*object.String); ok {
@@ -49,7 +49,7 @@ func (p *Plus) Eval(env *environment.Environment) object.Object {
 		if right.Type() == object.TypeUndefined {
 			return &object.String{Val: append([]rune(nil), leftObj.Val...)}
 		}
-		panic("invalid plus expression")
+		panic(fmt.Sprintf("TypeError: unsuported operand type for +: %s and %s", left.Type(), right.Type()))
 	}
 
 	// slice + slice
@@ -71,7 +71,7 @@ func (p *Plus) Eval(env *environment.Environment) object.Object {
 		}
 	}
 
-	panic("invalid plus expression")
+	panic(fmt.Sprintf("TypeError: unsuported operand type for +: %s and %s", left.Type(), right.Type()))
 }
 
 func (p *Plus) String() string {

@@ -14,14 +14,16 @@ type BitwiseAnd struct {
 }
 
 func (a *BitwiseAnd) Eval(env *environment.Environment) object.Object {
-	left, ok := a.Left.Eval(env).(*object.Int)
+	leftObj := a.Left.Eval(env)
+	rightObj := a.Right.Eval(env)
+	left, ok := leftObj.(*object.Int)
 	if !ok {
-		panic(fmt.Sprintf("type error: %s is not int", a.Left.String()))
+		panic(fmt.Sprintf("TypeError: unsuported operand type for &: %s and %s", leftObj.Type(), rightObj.Type()))
 	}
 
-	right, ok := a.Right.Eval(env).(*object.Int)
+	right, ok := rightObj.(*object.Int)
 	if !ok {
-		panic(fmt.Sprintf("type error: %s is not int", a.Right.String()))
+		panic(fmt.Sprintf("TypeError: unsuported operand type for &: %s and %s", leftObj.Type(), rightObj.Type()))
 	}
 	return &object.Int{Val: left.Val & right.Val}
 }

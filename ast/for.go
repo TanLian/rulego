@@ -62,9 +62,11 @@ func (f *For) AST(num int) string {
 	s.WriteString(f.Condition.AST(num + 1))
 	s.WriteString(strings.Repeat(". ", num+1) + " Post: ")
 	s.WriteString(f.Post.AST(num + 1))
+	s.WriteString(strings.Repeat(". ", num+1) + " Statements: {\n")
 	for i, v := range f.Statements {
-		s.WriteString(strings.Repeat(". ", num+1) + " Statements[" + strconv.Itoa(i) + "]: " + v.AST(0))
+		s.WriteString(strings.Repeat(". ", num+2) + strconv.Itoa(i) + ": " + v.AST(num+2))
 	}
+	s.WriteString(strings.Repeat(". ", num+1) + " }\n")
 	s.WriteString(strings.Repeat(". ", num) + " }\n")
 	return s.String()
 }

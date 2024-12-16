@@ -16,10 +16,16 @@ type Program struct {
 }
 
 func New() *Program {
-	return &Program{env: environment.Root}
+	env := environment.Root
+	return &Program{env: env}
 }
 
 func (p *Program) Run(input string) error {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println(err)
+		}
+	}()
 	log.SetFlags(0)
 	l := lexer.New(input)
 	ps := parser.NewParser(l)

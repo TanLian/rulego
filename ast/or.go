@@ -16,12 +16,12 @@ type Or struct {
 func (a *Or) Eval(env *environment.Environment) object.Object {
 	left, ok := a.Left.Eval(env).(*object.Int)
 	if !ok {
-		panic(fmt.Sprintf("type error: %s is not int", a.Left.String()))
+		panic(fmt.Sprintf("TypeError: %s is not int", a.Left))
 	}
 
 	right, ok := a.Right.Eval(env).(*object.Int)
 	if !ok {
-		panic(fmt.Sprintf("type error: %s is not int", a.Right.String()))
+		panic(fmt.Sprintf("TypeError: %s is not int", a.Right))
 	}
 	return &object.Int{Val: left.Val | right.Val}
 }

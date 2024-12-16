@@ -1,6 +1,6 @@
 package builtin
 
-import (
+/*import (
 	"fmt"
 
 	"github.com/tanlian/rulego/object"
@@ -58,4 +58,4 @@ type FuncBuiltin struct {
 
 func (f FuncBuiltin) Call(args ...object.Object) object.Object {
 	return f.fn(args...)
-}
+}*/

@@ -172,7 +172,7 @@ func (ep *Parser) registerInfixFn(t token.TokenType, fn infixParseFn) {
 // 以下是前缀表达式的解析
 
 func (p *Parser) parseBool() (ast.Expression, error) {
-	return &ast.Bool{Token: p.currentToken, Value: &object.Bool{Val: p.currentToken.Value == "true"}}, nil
+	return &ast.Bool{Value: &object.Bool{Val: p.currentToken.Value == "true"}}, nil
 }
 
 func (p *Parser) parseIdent() (ast.Expression, error) {
@@ -266,12 +266,12 @@ func (p *Parser) parseHashMap() (ast.Expression, error) {
 }
 
 func (p *Parser) parseFnLiteral() (ast.Expression, error) {
-	res := &ast.FnLiteralObj{}
+	obj := &object.LiteralFn{}
 	p.forward() // 跳过 fn
 	if !p.expectToken(token.IDENTIFIER) {
 		return nil, fmt.Errorf("exepect identifier, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
 	}
-	res.Name = p.currentToken.Value
+	obj.Name = p.currentToken.Value
 
 	p.forward() // 跳过函数名
 	if !p.expectToken(token.LPAREN) {
@@ -284,7 +284,7 @@ func (p *Parser) parseFnLiteral() (ast.Expression, error) {
 		if !p.expectToken(token.IDENTIFIER) {
 			return nil, fmt.Errorf("exepect identifier, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
 		}
-		res.Args = append(res.Args, p.currentToken.Value)
+		obj.Args = append(obj.Args, p.currentToken.Value)
 		p.forward() // 跳过形参
 		if p.expectToken(token.COMMA) {
 			p.forward() // 跳过 ,
@@ -302,19 +302,24 @@ func (p *Parser) parseFnLiteral() (ast.Expression, error) {
 	}
 	p.forward() // 跳过 {
 
+	var states []ast.Statement
 	for !p.expectToken(token.RBRACE) {
 		state, err := p.parseStatement()
 		if err != nil {
 			return nil, err
 		}
-		res.Statements = append(res.Statements, state)
+		states = append(states, state)
 		p.forward()
+	}
+	obj.Block = &ast.FnLiteralBlock{
+		Args:   obj.Args,
+		States: states,
 	}
 
 	if !p.expectToken(token.RBRACE) {
 		return nil, fmt.Errorf("exepect }, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
 	}
-	return res, nil
+	return &ast.FnLiteral{Obj: obj}, nil
 }
 
 func (p *Parser) parseRuleLiteral() (ast.Expression, error) {
@@ -652,7 +657,7 @@ func (p *Parser) parseImpl() (ast.Expression, error) {
 	}
 	p.forward() // 跳过 {
 
-	res := &ast.Impl{Name: name, Methods: make(map[string]*ast.FnLiteralObj)}
+	res := &ast.Impl{Name: name}
 	for !p.expectToken(token.RBRACE) {
 		if !p.expectToken(token.FUNC) {
 			return nil, fmt.Errorf("expect func, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
@@ -661,8 +666,7 @@ func (p *Parser) parseImpl() (ast.Expression, error) {
 		if err != nil {
 			return nil, err
 		}
-		fn := fnLiteral.(*ast.FnLiteralObj)
-		res.Methods[fn.Name] = fn
+		res.Methods = append(res.Methods, fnLiteral.(*ast.FnLiteral))
 		p.forward() // 跳过 }
 	}
 

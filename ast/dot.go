@@ -11,7 +11,7 @@ import (
 
 /*
 a = [1,2,3];
-a.push(4);
+a.Push(4);
 
 type user struct {
 	name string
@@ -30,22 +30,37 @@ func (p *Dot) Eval(env *environment.Environment) object.Object {
 	if !ok {
 		return object.Null
 	}
-	//fmt.Println(p.Left.String())
+
 	left := p.Left.Eval(env)
-	//fmt.Println("in dot leftObj: ", left.GetValue(), " type: ", left.Type())
-	if structObj, ok := left.(*object.Struct); ok {
-		stt := structObj.Value
-		if stt.Kind() == reflect.Pointer {
-			stt = stt.Elem()
+	// 注入的结构体
+	if structObj, ok := left.(*object.InjectStruct); ok {
+		if res := structObj.GetFieldValue(right.Token.Value); res != object.Null {
+			return res
 		}
-		val := stt.FieldByName(right.Token.Value)
-		if val.IsValid() {
-			return object.ToObject(val)
+
+		return &object.InjectStructCall{
+			MethodName: right.Token.Value,
+			Struct:     structObj,
 		}
 	}
 
-	if structObj, ok := left.(*object.RgStruct); ok {
-		return structObj.GetFieldValue(right.Token.Value)
+	// 内置结构体
+	if structObj, ok := left.(*object.Struct); ok {
+		if res := structObj.GetFieldValue(right.Token.Value); res != object.Null {
+			return res
+		}
+
+		if method, ok := structObj.Methods[right.Token.Value]; ok {
+			return &object.StructCall{Self: structObj, Method: method}
+		}
+	}
+
+	v := reflect.ValueOf(left)
+	if method := v.MethodByName(right.Token.Value); method.IsValid() {
+		return &object.InnerStructMethodCall{
+			Name:   right.Token.Value,
+			Method: method,
+		}
 	}
 	return object.Null
 }

@@ -5,24 +5,28 @@ import (
 
 	"github.com/tanlian/rulego/environment"
 	"github.com/tanlian/rulego/object"
-	"github.com/tanlian/rulego/token"
 )
 
 type Bool struct {
-	Token token.Token
 	Value *object.Bool
 }
 
-func (be *Bool) Eval(env *environment.Environment) object.Object {
-	return be.Value
+func (b *Bool) Eval(env *environment.Environment) object.Object {
+	return b.Value
 }
 
-func (be *Bool) String() string {
-	return be.Token.String()
+func (b *Bool) String() string {
+	if b.Value == nil {
+		return ""
+	}
+	if b.Value.Val {
+		return "true"
+	}
+	return "false"
 }
 
-func (be *Bool) AST(num int) string {
-	return fmt.Sprintf("*ast.Bool { %s }\n", be.Token.Value)
+func (b *Bool) AST(num int) string {
+	return fmt.Sprintf("*ast.Bool { %s }\n", b)
 }
 
-func (be *Bool) expressionNode() {}
+func (b *Bool) expressionNode() {}

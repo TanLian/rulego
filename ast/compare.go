@@ -28,46 +28,43 @@ type Compare struct {
 
 func (c *Compare) Eval(env *environment.Environment) object.Object {
 	leftObj := c.Left.Eval(env)
+	rightObj := c.Right.Eval(env)
 	if leftInt, ok := leftObj.(*object.Int); ok {
-		if rightInt, ok := c.Right.Eval(env).(*object.Int); ok {
+		if rightInt, ok := rightObj.(*object.Int); ok {
 			return &object.Bool{Val: compare(leftInt.Val, rightInt.Val, c.Flag)}
 		}
-		if rightFloat, ok := c.Right.Eval(env).(*object.Float); ok {
+		if rightFloat, ok := rightObj.(*object.Float); ok {
 			return &object.Bool{Val: compare(float64(leftInt.Val), rightFloat.Val, c.Flag)}
 		}
-		panic("invalid compare expression")
 	}
 
 	if leftFloat, ok := leftObj.(*object.Float); ok {
-		if rightInt, ok := c.Right.Eval(env).(*object.Int); ok {
+		if rightInt, ok := rightObj.(*object.Int); ok {
 			return &object.Bool{Val: compare(leftFloat.Val, float64(rightInt.Val), c.Flag)}
 		}
-		if rightFloat, ok := c.Right.Eval(env).(*object.Float); ok {
+		if rightFloat, ok := rightObj.(*object.Float); ok {
 			return &object.Bool{Val: compare(leftFloat.Val, rightFloat.Val, c.Flag)}
 		}
-		panic("invalid compare expression")
 	}
 
 	if leftStr, ok := leftObj.(*object.String); ok {
-		if rightStr, ok := c.Right.Eval(env).(*object.String); ok {
+		if rightStr, ok := rightObj.(*object.String); ok {
 			return &object.Bool{Val: compare(string(leftStr.Val), string(rightStr.Val), c.Flag)}
 		}
-		if rightRune, ok := c.Right.Eval(env).(*object.Rune); ok {
+		if rightRune, ok := rightObj.(*object.Rune); ok {
 			return &object.Bool{Val: compare(string(leftStr.Val), string(rightRune.Val), c.Flag)}
 		}
-		panic("invalid compare expression")
 	}
 
 	if leftRune, ok := leftObj.(*object.Rune); ok {
-		if rightRune, ok := c.Right.Eval(env).(*object.Rune); ok {
+		if rightRune, ok := rightObj.(*object.Rune); ok {
 			return &object.Bool{Val: compare(leftRune.Val, rightRune.Val, c.Flag)}
 		}
-		if rightStr, ok := c.Right.Eval(env).(*object.String); ok {
+		if rightStr, ok := rightObj.(*object.String); ok {
 			return &object.Bool{Val: compare(string(leftRune.Val), string(rightStr.Val), c.Flag)}
 		}
-		panic("invalid compare expression")
 	}
-	panic("invalid compare expression")
+	panic(fmt.Sprintf("TypeError: unsupported operand type(s) for %s: '%s' and '%s'", c.fmtCompareFlag(), leftObj.Type(), rightObj.Type()))
 }
 
 func (c *Compare) String() string {

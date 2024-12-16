@@ -225,14 +225,12 @@ println(c.age);
 `
 
 var input6 = `
-fn fib(n) {
-	if n < 2 {
-		return 1;
-	}
-	return fib(n-1) + fib(n-2);
+fn aaa(b) {
+	b += 10;
 }
 
-a = fib(10);
+a = 20;
+aaa(a);
 println(a);
 `
 
@@ -242,11 +240,12 @@ println(a);
 2. 报错行号支持 done
 3. 支持打印AST done
 4. 去掉所有的panic，优化错误信息
+5. 支持lambda表达式
 */
 
 func TestProgram_Run(t *testing.T) {
 	p := New()
-	p.Run(input6)
+	p.Run(testPrecedence)
 }
 
 func TestProgram_RunAll(t *testing.T) {
@@ -268,9 +267,30 @@ func TestProgram_RunAll(t *testing.T) {
 
 func TestProgramAST_Run(t *testing.T) {
 	input := `
-a = 10;
-a += 6;
-println(a);
+fn BubbleSort(arr) {
+	n = arr.Len();
+	for i = 0; i < n-1; i++ {
+		// 标志位，用于优化，记录这一轮是否有交换
+		swapped = false;
+		for j = 0; j < n-i-1; j += 1 {
+			if arr[j] > arr[j+1] {
+				tmp = arr[j];
+				arr[j] = arr[j+1];
+				arr[j+1] = tmp;
+				swapped = true;
+			}
+		}
+
+		// 如果没有交换，说明数组已经有序，可以提前结束
+		if !swapped {
+			break;
+		}
+	}
+}
+
+arr = [3,2,1,4];
+BubbleSort(arr);
+println(arr);
 `
 	p := New()
 	fmt.Println(p.AST(input))

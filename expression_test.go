@@ -15,6 +15,14 @@ func TestNewExpression1(t *testing.T) {
 	t.Log(NewExpression(`m["a"]+m["b"]`).Eval(env)) // result is 3
 }
 
+func TestNewExpression2(t *testing.T) {
+	env := environment.Root // 定义一个 environment 对象
+	user := &TestUser{Name: "leo", Age: 20}
+	env.Inject("User", user)
+	t.Log(NewExpression(`User.Name`).Eval(env))                     // result is leo
+	t.Log("User.Info(): ", NewExpression("User.Info(1)").Eval(env)) // result is "name: leo, age: 20, sex: 1"
+}
+
 func TestNewExpression(t *testing.T) {
 	env := environment.New(environment.Root)
 

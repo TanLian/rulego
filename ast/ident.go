@@ -17,8 +17,10 @@ func (ie *Ident) Eval(env *environment.Environment) object.Object {
 	if obj, has := env.Get(ie.Token.Value); has {
 		return obj
 	}
+	if ie.Token.Value == "println" {
+		return &object.BuiltinFn{Name: ie.Token.Value}
+	}
 	panic(fmt.Sprintf("NameError: name '%s' is not defined", ie.Token.Value))
-	//return object.Null
 }
 
 func (ie *Ident) String() string {

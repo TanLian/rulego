@@ -21,10 +21,10 @@ type StructLiteral struct {
 }
 
 func (rs *StructLiteral) Eval(env *environment.Environment) object.Object {
-	env.Set(rs.Name, &object.RgStruct{
+	env.Set(rs.Name, &object.Struct{
 		Name:    rs.Name,
 		Fields:  rs.Fields,
-		Methods: make(map[string]object.Method),
+		Methods: make(map[string]object.Caller),
 		Values:  make(map[string]object.Object),
 	})
 	return object.Null
@@ -60,7 +60,7 @@ type RgStructInstantiate struct {
 
 func (rsi *RgStructInstantiate) Eval(env *environment.Environment) object.Object {
 	obj := rsi.Ident.Eval(env)
-	rs, ok := obj.(*object.RgStruct)
+	rs, ok := obj.(*object.Struct)
 	if !ok {
 		panic("not a struct")
 	}

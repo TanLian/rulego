@@ -13,11 +13,12 @@ type Bang struct {
 }
 
 func (b *Bang) Eval(env *environment.Environment) object.Object {
-	expr, ok := b.Expr.Eval(env).(*object.Bool)
+	obj := b.Expr.Eval(env)
+	boolObj, ok := obj.(*object.Bool)
 	if !ok {
-		panic(fmt.Sprintf("type error: %s is not bool", b.Expr.String()))
+		panic(fmt.Sprintf("TypeError: ! operator does not support converting %s to bool", obj.Type()))
 	}
-	return &object.Bool{Val: !expr.Val}
+	return &object.Bool{Val: !boolObj.Val}
 }
 
 func (b *Bang) String() string {

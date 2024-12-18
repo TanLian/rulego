@@ -31,22 +31,25 @@ fn BubbleSort(arr) {
 arr = [3,2,1,4];
 BubbleSort(arr);
 println(arr);
+assert_eq(arr, [1,2,3,4]);
 `
 
 var input2 = `
 fn construct2DArray(original, m, n) {
-	if m*n != len(original) {
+	if m*n != original.Len() {
 		return [];
 	}
 
 	res = [];
-	for i = 0; i < len(original); i += n {
+	for i = 0; i < original.Len(); i += n {
 		res.Push(original[i:i+n]);
 	}
 	return res;
 }
 
-println(construct2DArray([1,2,3,4], 2, 2));
+res = construct2DArray([1,2,3,4], 2, 2);
+println(res);
+assert_eq(res, [[1,2],[3,4]]);
 `
 
 var input3 = `
@@ -76,6 +79,7 @@ fn subarraySum(nums, k) {
 
 ccc = subarraySum([1,2,3],3);
 println("res: ", ccc);
+assert_eq(ccc, 2);
 `
 
 var testMap = `
@@ -89,19 +93,23 @@ m["b"] = 2;
 m["a"] += 2;
 m["b"] += 2;
 println(m);
-
+assert_eq(m, {"a":5,"b":4});
 d = m["c"]; // 查询一个不存在的key的value
 e = d+1;
 println("d:", d);
 println("e:", e);
+assert_eq(e, 1);
 
 // 判断key是否存在
 println("contains: ", m.ContainsKey("e"));
 println("contains: ", m.ContainsKey("a"));
+assert_eq(m.ContainsKey("e"), false);
+assert_eq(m.ContainsKey("a"), true);
 
 // 删除key
 m.Remove("b");
 println(m);
+assert_eq(m, {"a":5});
 `
 
 var testSlice = `
@@ -109,9 +117,11 @@ var testSlice = `
 a = [0;10]; // 长度为10，且每个元素都是0
 a[1] = 1; // update
 println(a);
+assert_eq(a, [0,1,0,0,0,0,0,0,0,0]);
 
 b = [1,2,3];
 println(b);
+assert_eq(b, [1,2,3]);
 `
 
 var testContinue = `
@@ -127,58 +137,57 @@ var testMinusMinus = `
 a = 5;
 a--;
 println(a);
+assert_eq(a, 4);
 `
 
 var testPlusAssign = `
 a = 10;
 a += 6;
 println(a);
+assert_eq(a, 16);
 `
 
 var testMinusAssign = `
 a = 10;
 a -= 6;
 println(a);
+assert_eq(a, 4);
 `
 
 var input4 = `
 fn aaa(nums) {
-	a = 1;
-	nums.Push(1);
-	//nums.Push(b);
+	nums.Push(a);
 }
 
 fn bbb() {
 	nums = [];
-	b = a;
 	aaa(nums);
 	println(nums);
+	assert_eq(nums, [2]);
 }
 
 a = 2;
-c = 3;
 bbb();
 `
 
 var testPrecedence = `
-println(5 + 3 & 6); // 0
-println(5 & 3 + 6); // 1
-println(10 - 4 | 1); // 7
-println((5 + 3) & 6); // 0
-println(3 * 2 & 7); // 6
-println(12 / 3 | 4); // 4
-println(5 + 3 * 2 & 7 | 1); // 3
-println((5 + 3) * (2 & 7) | 1); // 17
-println((5 << 2) + (3 & 1)); // 21
-println((20 >> 2) - (8 | 1)); // -4
-println(0 & 1 + 2); // 0
-println(-1 | 5 * 2); // -1
-println(-5 ^ 4 - 3); // -6
-println((1 << 31) + 5 & 7); // 5
-println(((((5 + 3) * 2 & 7) | 1) ^ 4) << 2); // 20
-println(2 > 1^3); // false
-println(1<<3&77); // 8
-println(1+2<<5); // 96
+assert_eq(5 + 3 & 6, 0);
+assert_eq(5 & 3 + 6, 1);
+assert_eq(10 - 4 | 1, 7);
+assert_eq((5 + 3) & 6, 0);
+assert_eq(3 * 2 & 7, 6);
+assert_eq(12 / 3 | 4, 4);
+assert_eq(5 + 3 * 2 & 7 | 1, 3);
+assert_eq((5 << 2) + (3 & 1), 21);
+assert_eq((20 >> 2) - (8 | 1), -4);
+assert_eq(0 & 1 + 2, 0);
+assert_eq(-1 | 5 * 2, -1);
+assert_eq(-5 ^ 4 - 3, -6);
+assert_eq((1 << 31) + 5 & 7, 5);
+assert_eq(((((5 + 3) * 2 & 7) | 1) ^ 4) << 2, 20);
+assert_eq(2 > 1^3, false);
+assert_eq(1<<3&77, 8);
+assert_eq(1+2<<5, 96);
 `
 
 var testStruct = `
@@ -199,12 +208,15 @@ impl person {
 
 p1 = person{1,"leo"};
 println(p1.get_name());
+assert_eq(p1.get_name(), "leo");
 
 p1.set_name("leo2");
 println(p1.get_name());
+assert_eq(p1.get_name(), "leo2");
 
 p2 = person{name:"george"};
 println(p2.get_name());
+assert_eq(p2.get_name(), "george");
 `
 
 var input5 = `
@@ -216,36 +228,115 @@ struct person {
 a = [person{1,"leo"}, person{2,"george"}];
 b = a[0].name;
 println(b);
-
+assert_eq(b, "leo");
 fn aaa() {
 	return person{age:100};
 }
 c = aaa();
 println(c.age);
+assert_eq(c.age, 100);
+`
+
+var testAssertEq = `
+assert_eq(1, 1);
+assert_eq([1,2,3], [1,2,3]);
+`
+
+var testClosure = `
+fn outer(y) {
+	x = 10;
+	println("y: ", y);
+	fn inner(z) {
+		println("z: ", z);
+		return x+y+z;
+	}
+	return inner;
+}
+
+b = outer(5);
+c = b(3);
+println(c);
+assert_eq(c, 18);
+`
+
+var testLambda = `
+x = lambda a, b, c : a + b + c;
+println(x(5, 6, 2));
+assert_eq(x(5, 6, 2), 13);
+
+f = lambda: "Hello, world!";
+println(f());
+assert_eq(f(), "Hello, world!");
+`
+
+var testCombinationSum = `
+fn backtracking(nums, sum, start, result, target, candidates) {
+    if sum == target {
+        result.Push(nums.Clone());
+        return 1;
+    }
+
+    if sum > target {
+        return 1;
+    }
+
+    for i = start; i < candidates.Len(); i++ {
+        nums.Push(candidates[i]);
+        sum += candidates[i];
+        backtracking(nums, sum, i, result, target, candidates);
+        sum -= candidates[i];
+        nums.Pop();
+    }
+}
+
+fn combinationSum(candidates, target) {
+    result = [];
+    backtracking([], 0, 0, result, target, candidates);
+    return result;
+}
+
+res = combinationSum([2,3,7], 7);
+assert_eq(res, [[2,2,3], [7]]);
+`
+
+var testIter = `
+a = [1,2,3];
+b = a.Iter().Map(lambda x: x*2).Collect();
+assert_eq(b, [2,4,6]);
 `
 
 var input6 = `
-fn aaa(b) {
-	b += 10;
+enum Option {
+	None
+	Some(data),
 }
 
-a = 20;
-aaa(a);
+a = Option.Some(10);
 println(a);
+assert_eq(a, Option.Some(10));
+
+b = Option.None;
+println(b);
+assert_eq(b, Option.None);
 `
 
 // TODO:
 /*
 1. 去掉panic，改成return error  done
-2. 报错行号支持 done
 3. 支持打印AST done
 4. 去掉所有的panic，优化错误信息
-5. 支持lambda表达式
+5. 支持闭包 done
+6. 支持返回函数 done
+7. 支持返回空值：return; done
+8. 支持lambda表达式 done
+9. 支持enum
+10. 支持迭代器
 */
 
 func TestProgram_Run(t *testing.T) {
 	p := New()
-	p.Run(testPrecedence)
+	p.Run(testClosure)
+	//fmt.Println(p.AST(testLambda))
 }
 
 func TestProgram_RunAll(t *testing.T) {
@@ -255,7 +346,8 @@ func TestProgram_RunAll(t *testing.T) {
 		testInlineComments, testFib, testMap, testSlice,
 		testContinue, testMinusMinus, testPlusAssign,
 		testMinusAssign, input4, testPrecedence, testStruct,
-		input5, input6}
+		input5, testAssertEq, testLambda, testClosure,
+		input2, input3, testBacktracking, testCombinationSum}
 	for i, v := range tests {
 		p := New()
 		if err := p.Run(v); err != nil {
@@ -299,19 +391,25 @@ println(arr);
 var testReverseString = `
 s = "    hello world    ";
 println(s.Reverse());
+assert_eq(s.Reverse(), "    dlrow olleh    ");
+
 s = s.Trim(" ");
 println(s);
+assert_eq(s, "hello world");
 
 arr = s.Split(" ");
 println(arr);
+assert_eq(arr, ["hello", "world"]);
 
 println(s.Contains("hello"));
+assert_eq(s.Contains("hello"), true);
 `
 
 var testPlusPlus = `
 a = 10;
 a++;
 println(a);
+assert_eq(a, 11);
 `
 
 var testFor = `
@@ -370,12 +468,14 @@ default:
 	a += 5;
 }
 println(a);
+assert_eq(a, 20);
 `
 
 var testInlineComments = `
 a = []; 
-// a.Push(1);
+a.Push(1);
 println(a);
+assert_eq(a, [1]);
 `
 
 var testFib = `
@@ -388,6 +488,7 @@ fn fib(n) {
 
 c = fib(10);
 println(c);
+assert_eq(c, 89);
 `
 
 // testBacktracking 测试全排列
@@ -420,4 +521,5 @@ fn permute(nums) {
 
 a = permute([1,2,3]);
 println(a);
+assert_eq(a, [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]);
 `

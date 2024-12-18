@@ -50,8 +50,13 @@ func (p *Dot) Eval(env *environment.Environment) object.Object {
 			return res
 		}
 
-		if method, ok := structObj.Methods[right.Token.Value]; ok {
-			return &object.StructCall{Self: structObj, Method: method}
+		// 检查是不是结构体的方法
+		if sObj, ok := env.Get(structObj.Name); ok {
+			if obj, ok := sObj.(*StructLiteral); ok {
+				if fn, ok := obj.Methods[right.Token.Value]; ok {
+					return &StructCall{Self: structObj, Method: fn}
+				}
+			}
 		}
 	}
 

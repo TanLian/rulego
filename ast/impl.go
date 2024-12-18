@@ -19,13 +19,13 @@ func (im *Impl) Eval(env *environment.Environment) object.Object {
 		panic(fmt.Sprintf("NameError: no such impl %s", im.Name))
 	}
 
-	stu, ok := obj.(*object.Struct)
+	stu, ok := obj.(*StructLiteral)
 	if !ok {
 		panic(fmt.Sprintf("TypeError: impl %s is not a struct", im.Name))
 	}
 
 	for _, v := range im.Methods {
-		stu.Methods[v.Obj.Name] = v.Obj.Block
+		stu.Methods[v.Name] = v
 	}
 	return object.Null
 }

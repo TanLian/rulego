@@ -15,6 +15,9 @@ type Return struct {
 func (r *Return) statementNode() {}
 
 func (r *Return) Exec(env *environment.Environment) (object.Object, ExecFlag) {
+	if r.Expr == nil {
+		return object.Null, RETURN
+	}
 	return r.Expr.Eval(env), RETURN
 }
 

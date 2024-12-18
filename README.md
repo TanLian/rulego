@@ -1,15 +1,129 @@
-# 表达式
-## 解析
-支持 
+# RuleGo
+
+RuleGo 是一个项目，包含两个主要部分：
+1. 一个简洁优雅的脚本语言（RuleScript）
+2. 一个强大的规则引擎系统（RuleEngine）
+
+## 项目结构
+
+```go
+rulego/
+├── token/ # token定义
+├── lexer/ # 词法分析器
+├── ast/ # 抽象语法树
+├── parser/ # 解析器，生成ast
+├── environment/ # 存储注入的数据以及运行时产生的值
+├── object/ # 对象系统
+├── program/ # 程序
+├── repl/ # Read-Eval-Print Loop
+├── util/ # 用到的工具函数
+
+```
+
+## 第一部分：RuleScript 脚本语言
+
+RuleScript 是一个简单但功能强大的脚本语言，语法借鉴了 Go 和 JavaScript 的优点。
+
+### 语言特性
+
+#### 1. 基础语法
+```go
+// 变量定义
+x = 42; // int
+name = "Alice"; // string
+numbers = [1, 2, "hello", 3.14]; // slice
+person = {"name": "Bob", "age": 25}; // map
+
+// 条件语句
+if x > 0 {
+    println("positive");
+} else {
+    println("non-positive");
+}
+
+// for循环
+for(i = 0; i < 10; i++) {
+    println(i);
+}
+```
+
+#### 2. 函数和闭包
+```go
+// 函数定义
+fn add(a, b) {
+    return a + b;
+}
+
+// 闭包
+fn outer(y) {
+    x = 10;
+    fn inner(z) {
+        return x+y+z;
+    }
+    return inner;
+}
+b = outer(5);
+c = b(3);
+assert_eq(c, 18);
+```
+
+#### 3. Lambda 表达式
+```go
+x = lambda a, b, c : a + b + c;
+assert_eq(x(5, 6, 2), 13);
+
+f = lambda: "Hello, world!";
+assert_eq(f(), "Hello, world!");
+```
+
+#### 4. 结构体
+```go
+struct person {
+    age,
+    name,
+}
+
+impl person {
+    fn get_name(self) {
+        self.name
+    }
+
+    fn set_name(self, name) {
+        self.name = name;
+    }
+}
+
+p1 = person{1,"leo"};
+assert_eq(p1.get_name(), "leo");
+```
+
+### 语言特点
+- 动态类型系统
+- 一等公民函数
+- 闭包支持
+- lambda
+- 丰富的内置函数 TODO
+- 完整的错误处理 TODO
+
+## 第二部分：RuleEngine 规则引擎
+
+RuleEngine 是一个基于 RuleScript 的规则引擎系统，用于定义和执行业务规则。
+
+### 规则引擎特性
+#### 表达式
+###### 解析
+支持
 - ==、!=、> 、>=、<、<=
 - &&、||、!
 - +、-、*、/
 - myFunc(X)、a.b()
 - array[index]、a.b.c
 
-## 注入数据
+###### 注入数据
 - 我们强调代码（包括表达式、规则等）与数据**分离**的思想，规则是预先定义好的，而数据是动态注入的
 ```go
+import "github.com/tanlian/rulego/environment"
+
 env := environment.New(environment.Root)
 env.Inject("User", &User{Name:"leo", Age: 18}) // 注入一个结构体对象
 env.Inject("Nums", []uint32{0,1,2,3}) // 注入一个slice对象
@@ -17,10 +131,10 @@ env.Inject("MapInfo", map[string]interface{}{"name":"leo"}) // 注入一个map�
 env.Inject("println",fmt.Println) // 注入一个函数
 ```
 
-## 执行
+##### 执行
 result := NewExpression("your expression").Eval(env)
 
-## 示例
+###### 示例
 ```go
 // 数字运算
 NewExpression("(12+8)*5-(36/6)+(4*7)-10").Eval(nil) // result is 112
@@ -79,8 +193,8 @@ env.Inject("sep", " ")
 NewExpression("join(elems, sep)").Eval(env) // result is "hello my name is leo"
 ```
 
-# 规则
-## 语法格式
+#### 规则
+##### 语法格式
 ```go
 rule rule_name
 {
@@ -91,8 +205,8 @@ rule rule_name
 }
 ```
 
-## 支持的语句
-### for语句
+#### 支持的语句
+##### for语句
 ```go
 rule rule_for
 {
@@ -104,7 +218,7 @@ rule rule_for
 }
 ```
 
-### if语句
+##### if语句
 ```go
 rule rule_if
 {
@@ -117,7 +231,7 @@ rule rule_if
     }
 }
 ```
-## 解析
+##### 解析
 
 ```go
 rule := NewRule(input string)
@@ -129,15 +243,15 @@ rule := NewRule(input string)
 4. 规则之间**不能相互调用**，规则也不能递归调用自己
 5. 限制：一次性只能解析**单个**规则
 
-## 注入数据
+##### 注入数据
 同表达式的数据部分
 
-## 执行
+##### 执行
 ```go
 result := rule.Execute(env)
 ```
 
-## 示例
+##### 示例
 ```go
 env := environment.New(environment.Root)
 input := `rule rule_if
@@ -155,10 +269,10 @@ env.Inject("println", fmt.Println)
 fmt.Println(NewRule(input).Execute(env)) // it will print "You are an adult."
 ```
 
-# 多规则
+#### 多规则
 上面的规则一次性只能解析单个规则，本小节描述如何一次解析多个规则111。
 
-## 定义多个规则
+##### 定义多个规则
 ```go
 fn fib(n) {
 	if n < 2 {
@@ -185,7 +299,7 @@ rule rule2
 - 规则内**可以调用函数**，不管是用户自定义的函数还是通过environment注入的函数
 - **优先使用**通过environment注入的函数
 
-## 规则的执行、更新、删除
+##### 规则的执行、更新、删除
 
 ```go
 mr := NewMultiRule(input)   // input就是上面定义的多规则
@@ -206,5 +320,5 @@ mr.Upsert(newRule1) // 动态更新rule1
 mr.Remove("rule2")  // 删除rule2
 ```
 
-# 规则的编排
+#### 规则的编排
 TODO

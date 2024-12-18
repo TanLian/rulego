@@ -16,22 +16,23 @@ struct person {
 */
 
 type StructLiteral struct {
-	Name   string
-	Fields []string
+	*object.Empty
+	Name    string
+	Fields  []string
+	Methods map[string]*FnLiteral
 }
 
 func (rs *StructLiteral) Eval(env *environment.Environment) object.Object {
-	env.Set(rs.Name, &object.Struct{
-		Name:    rs.Name,
-		Fields:  rs.Fields,
-		Methods: make(map[string]object.Caller),
-		Values:  make(map[string]object.Object),
-	})
-	return object.Null
+	env.Set(rs.Name, rs)
+	return rs
 }
 
 func (rs *StructLiteral) String() string {
 	return ""
+}
+
+func (rs *StructLiteral) Type() object.Type {
+	return object.TypeStruct
 }
 
 func (rs *StructLiteral) expressionNode() {}
@@ -47,6 +48,15 @@ func (rs *StructLiteral) AST(num int) string {
 	return s.String()
 }
 
+func (rs *StructLiteral) CheckFieldExist(field string) bool {
+	for _, v := range rs.Fields {
+		if field == v {
+			return true
+		}
+	}
+	return false
+}
+
 /*
 p1 = person{1,"leo"};
 p2 = person{age: 2};
@@ -60,18 +70,22 @@ type RgStructInstantiate struct {
 
 func (rsi *RgStructInstantiate) Eval(env *environment.Environment) object.Object {
 	obj := rsi.Ident.Eval(env)
-	rs, ok := obj.(*object.Struct)
+	rs, ok := obj.(*StructLiteral)
 	if !ok {
 		panic("not a struct")
 	}
-	rs = rs.Clone()
+
+	res := &object.Struct{
+		Name:   rs.Name,
+		Values: make(map[string]object.Object),
+	}
 
 	if len(rsi.Values) > 0 {
 		if len(rs.Fields) != len(rsi.Values) {
 			panic("struct fields count not match")
 		}
 		for i, v := range rs.Fields {
-			rs.SetFieldValue(v, rsi.Values[i].Eval(env))
+			res.SetFieldValue(v, rsi.Values[i].Eval(env))
 		}
 	}
 
@@ -86,10 +100,10 @@ func (rsi *RgStructInstantiate) Eval(env *environment.Environment) object.Object
 			if !rs.CheckFieldExist(field) {
 				panic(fmt.Sprintf("field %s not exist in struct %s", field, rs.Name))
 			}
-			rs.SetFieldValue(field, v.Eval(env))
+			res.SetFieldValue(field, v.Eval(env))
 		}
 	}
-	return rs
+	return res
 }
 
 func (rsi *RgStructInstantiate) String() string {

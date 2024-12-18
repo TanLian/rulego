@@ -21,11 +21,11 @@ func New() *Program {
 }
 
 func (p *Program) Run(input string) error {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Println(err)
-		}
-	}()
+	// defer func() {
+	// 	if err := recover(); err != nil {
+	// 		log.Println(err)
+	// 	}
+	// }()
 	log.SetFlags(0)
 	l := lexer.New(input)
 	ps := parser.NewParser(l)

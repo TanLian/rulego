@@ -27,12 +27,27 @@ func (idx *Index) Eval(env *environment.Environment) object.Object {
 
 	if s, ok := data.(*object.Slice); ok {
 		if idx.End != nil {
-			start, okStart := idx.Key.Eval(env).GetValue().(float64)
-			end, okEnd := idx.End.Eval(env).GetValue().(float64)
-			if !okStart || !okEnd {
+			startObj := idx.Key.Eval(env)
+			endObj := idx.End.Eval(env)
+			var start, end int
+			switch obj := startObj.(type) {
+			case *object.Int:
+				start = int(obj.Val)
+			case *object.Float:
+				start = int(obj.Val)
+			default:
 				panic("invalid index expression")
 			}
-			return &object.Slice{Val: s.Val[int(start):int(end)]}
+
+			switch obj := endObj.(type) {
+			case *object.Int:
+				end = int(obj.Val)
+			case *object.Float:
+				end = int(obj.Val)
+			default:
+				panic("invalid index expression")
+			}
+			return &object.Slice{Val: s.Val[start:end]}
 		}
 
 		if index, ok := key.(int64); !ok {

@@ -21,6 +21,7 @@ type Parser struct {
 
 	prefixFn     map[token.TokenType]prefixParseFn
 	infixParseFn map[token.TokenType]infixParseFn
+	inFn         bool
 
 	// token 相关
 	currentToken token.Token
@@ -42,6 +43,7 @@ func NewParser(l *lexer.Lexer) *Parser {
 	p.registerPrefixFn(token.LBRACKET, p.parseSlice)
 	p.registerPrefixFn(token.LBRACE, p.parseHashMap)
 	p.registerPrefixFn(token.FUNC, p.parseFnLiteral)
+	p.registerPrefixFn(token.LAMBDA, p.parseLambda)
 	p.registerPrefixFn(token.RULE, p.parseRuleLiteral)
 	p.registerPrefixFn(token.BANG, p.parseBang)
 	p.registerPrefixFn(token.PLUS, p.parsePositive)
@@ -136,23 +138,38 @@ func (p *Parser) parseStatement(precedence ...int) (ast.Statement, error) {
 	return &ast.ExpressionStatement{Expr: expr}, nil
 }
 
+// ParseExpression 解析表达式，使用普拉特解析法(Pratt Parsing)
+// precedence 参数表示当前正在解析的表达式的优先级
+// 返回解析后的表达式和可能的错误
 func (p *Parser) ParseExpression(precedence int) (ast.Expression, error) {
+	// 获取当前token对应的前缀解析函数
 	prefix := p.prefixFn[p.currentToken.Type]
 	if prefix == nil {
-		return nil, fmt.Errorf("unrecognized token: %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		// 如果找不到对应的前缀解析函数，说明是未识别的token
+		return nil, fmt.Errorf("unrecognized token: %s on line %d, col: %d",
+			p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
 	}
+
+	// 使用前缀解析函数解析左侧表达式
 	leftExp, err := prefix()
 	if err != nil {
 		return nil, err
 	}
 
+	// 循环处理中缀表达式
+	// 条件1: 下一个token不是分号
+	// 条件2: 当前优先级小于下一个运算符的优先级
 	for !p.expectPeekToken(token.SEMICOLON) && precedence < token.GetPrecedence(p.peekToken.Type) {
+		// 获取中缀解析函数
 		infix := p.infixParseFn[p.peekToken.Type]
 		if infix == nil {
+			// 如果没有对应的中缀解析函数，直接返回左侧表达式
 			return leftExp, nil
 		}
 
+		// 前进到运算符token
 		p.forward()
+		// 使用中缀解析函数解析，传入已解析的左侧表达式
 		leftExp, err = infix(leftExp)
 		if err != nil {
 			return nil, err
@@ -266,12 +283,21 @@ func (p *Parser) parseHashMap() (ast.Expression, error) {
 }
 
 func (p *Parser) parseFnLiteral() (ast.Expression, error) {
-	obj := &object.LiteralFn{}
+	if p.inFn { // 解析闭包
+		return p.parseClosure()
+	}
+
+	p.inFn = true
+	defer func() {
+		p.inFn = false
+	}()
+
+	res := &ast.FnLiteral{}
 	p.forward() // 跳过 fn
 	if !p.expectToken(token.IDENTIFIER) {
 		return nil, fmt.Errorf("exepect identifier, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
 	}
-	obj.Name = p.currentToken.Value
+	res.Name = p.currentToken.Value
 
 	p.forward() // 跳过函数名
 	if !p.expectToken(token.LPAREN) {
@@ -284,7 +310,7 @@ func (p *Parser) parseFnLiteral() (ast.Expression, error) {
 		if !p.expectToken(token.IDENTIFIER) {
 			return nil, fmt.Errorf("exepect identifier, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
 		}
-		obj.Args = append(obj.Args, p.currentToken.Value)
+		res.Args = append(res.Args, p.currentToken.Value)
 		p.forward() // 跳过形参
 		if p.expectToken(token.COMMA) {
 			p.forward() // 跳过 ,
@@ -292,48 +318,130 @@ func (p *Parser) parseFnLiteral() (ast.Expression, error) {
 	}
 
 	if !p.expectToken(token.RPAREN) {
-		return nil, fmt.Errorf("exepect ), found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("exepect ), found %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	p.forward() // 跳过 )
 
 	// 解析函数体
 	if !p.expectToken(token.LBRACE) {
-		return nil, fmt.Errorf("exepect {, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("exepect {, found %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	p.forward() // 跳过 {
 
-	var states []ast.Statement
 	for !p.expectToken(token.RBRACE) {
 		state, err := p.parseStatement()
 		if err != nil {
 			return nil, err
 		}
-		states = append(states, state)
+		res.States = append(res.States, state)
 		p.forward()
-	}
-	obj.Block = &ast.FnLiteralBlock{
-		Args:   obj.Args,
-		States: states,
 	}
 
 	if !p.expectToken(token.RBRACE) {
-		return nil, fmt.Errorf("exepect }, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("exepect }, found %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
-	return &ast.FnLiteral{Obj: obj}, nil
+	return res, nil
+}
+
+func (p *Parser) parseClosure() (ast.Expression, error) {
+	if !p.inFn { // 解析闭包
+		return nil, fmt.Errorf("parseClosure error: %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
+	}
+
+	res := &ast.Closure{}
+	p.forward() // 跳过 fn
+	if !p.expectToken(token.IDENTIFIER) {
+		return nil, fmt.Errorf("exepect identifier, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+	}
+	res.Name = p.currentToken.Value
+
+	p.forward() // 跳过函数名
+	if !p.expectToken(token.LPAREN) {
+		return nil, fmt.Errorf("exepect (, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+	}
+	p.forward() // 跳过 (
+
+	// 解析参数列表
+	for !p.expectToken(token.RPAREN) {
+		if !p.expectToken(token.IDENTIFIER) {
+			return nil, fmt.Errorf("exepect identifier, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		}
+		res.Args = append(res.Args, p.currentToken.Value)
+		p.forward() // 跳过形参
+		if p.expectToken(token.COMMA) {
+			p.forward() // 跳过 ,
+		}
+	}
+
+	if !p.expectToken(token.RPAREN) {
+		return nil, fmt.Errorf("exepect ), found %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
+	}
+	p.forward() // 跳过 )
+
+	// 解析函数体
+	if !p.expectToken(token.LBRACE) {
+		return nil, fmt.Errorf("exepect {, found %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
+	}
+	p.forward() // 跳过 {
+
+	for !p.expectToken(token.RBRACE) {
+		state, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		res.States = append(res.States, state)
+		p.forward()
+	}
+
+	if !p.expectToken(token.RBRACE) {
+		return nil, fmt.Errorf("exepect }, found %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
+	}
+	return res, nil
+}
+
+// x = lambda a, b, c : a + b + c;
+// f = lambda: "Hello, world!";
+func (p *Parser) parseLambda() (ast.Expression, error) {
+	res := &ast.FnLiteral{}
+	p.forward() // 跳过 lambda
+
+	// 解析参数列表
+	for !p.expectToken(token.COLON) {
+		if !p.expectToken(token.IDENTIFIER) {
+			return nil, fmt.Errorf("exepect identifier, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		}
+		res.Args = append(res.Args, p.currentToken.Value)
+		p.forward() // 跳过形参
+		if p.expectToken(token.COMMA) {
+			p.forward() // 跳过 ,
+		}
+	}
+
+	if !p.expectToken(token.COLON) {
+		return nil, fmt.Errorf("exepect :, found %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
+	}
+	p.forward() // 跳过 :
+
+	exp, err := p.ParseExpression(token.PrecedenceLowest)
+	if err != nil {
+		return nil, err
+	}
+	res.States = []ast.Statement{&ast.Return{Expr: exp}}
+	return res, nil
 }
 
 func (p *Parser) parseRuleLiteral() (ast.Expression, error) {
 	res := &ast.Rule{}
 	p.forward() // 跳过 rule
 	if !p.expectToken(token.IDENTIFIER) {
-		return nil, fmt.Errorf("exepect identifier, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("exepect identifier, found %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	res.Name = p.currentToken.Value
 
 	p.forward() // 跳过名字
 	// 解析函数体
 	if !p.expectToken(token.LBRACE) {
-		return nil, fmt.Errorf("exepect {, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("exepect {, found %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	p.forward() // 跳过 {
 
@@ -347,7 +455,7 @@ func (p *Parser) parseRuleLiteral() (ast.Expression, error) {
 	}
 
 	if !p.expectToken(token.RBRACE) {
-		return nil, fmt.Errorf("exepect }, found %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("exepect }, found %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	return res, nil
 }
@@ -430,7 +538,7 @@ func (p *Parser) parseIfStatement() ([]ast.ExprStates, []ast.Statement, error) {
 			ifs = append(ifs, tmpIfs...)
 			elseStates = tmpElseStates
 		} else {
-			return nil, nil, fmt.Errorf("expect if or }, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+			return nil, nil, fmt.Errorf("expect if or }, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 		}
 	}
 	return ifs, elseStates, nil
@@ -439,7 +547,7 @@ func (p *Parser) parseIfStatement() ([]ast.ExprStates, []ast.Statement, error) {
 func (p *Parser) parseReturn() (ast.Expression, error) {
 	p.forward() // 跳过 return
 	if p.expectToken(token.SEMICOLON) {
-		return nil, nil
+		return &ast.Return{}, nil
 	}
 	expr, err := p.ParseExpression(token.PrecedenceLowest)
 	if err != nil {
@@ -467,7 +575,7 @@ func (p *Parser) parseFor() (ast.Expression, error) {
 	res := &ast.For{Initial: initial}
 
 	if !p.expectToken(token.SEMICOLON) {
-		return nil, fmt.Errorf("expect ;, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("expect ;, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	p.forward() // 跳过 ;
 
@@ -479,7 +587,7 @@ func (p *Parser) parseFor() (ast.Expression, error) {
 
 	p.forward()
 	if !p.expectToken(token.SEMICOLON) {
-		return nil, fmt.Errorf("expect ;, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("expect ;, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	p.forward() // 跳过 ;
 
@@ -510,7 +618,7 @@ func (p *Parser) parseSwitch() (ast.Expression, error) {
 	p.forward()
 
 	if !p.expectToken(token.LBRACE) {
-		return nil, fmt.Errorf("expect {, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("expect {, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	p.forward() // 跳过 {
 
@@ -524,7 +632,7 @@ func (p *Parser) parseSwitch() (ast.Expression, error) {
 
 		var states []ast.Statement
 		if !p.expectToken(token.COLON) {
-			return nil, fmt.Errorf("expect :, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+			return nil, fmt.Errorf("expect :, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 		}
 
 		p.forward() // 跳过 :
@@ -546,7 +654,7 @@ func (p *Parser) parseSwitch() (ast.Expression, error) {
 	if p.expectToken(token.DEFAULT) {
 		p.forward() // 跳过 default
 		if !p.expectToken(token.COLON) {
-			return nil, fmt.Errorf("expect :, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+			return nil, fmt.Errorf("expect :, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 		}
 		p.forward() // 跳过 :
 
@@ -561,7 +669,7 @@ func (p *Parser) parseSwitch() (ast.Expression, error) {
 	}
 
 	if !p.expectToken(token.RBRACE) {
-		return nil, fmt.Errorf("expect }, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("expect }, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	return res, nil
 }
@@ -575,7 +683,7 @@ func (p *Parser) parseGroup() (ast.Expression, error) {
 	res := &ast.Group{Expr: expr}
 	p.forward()
 	if !p.expectToken(token.RPAREN) {
-		return nil, fmt.Errorf("expect ), but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("expect ), but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	return res, nil
 }
@@ -584,7 +692,7 @@ func (p *Parser) parseGroup() (ast.Expression, error) {
 // 函数执行前 currentToken 指向{，函数执行后 currentToken 指向}
 func (p *Parser) parseBlockStatement() ([]ast.Statement, error) {
 	if !p.expectToken(token.LBRACE) {
-		return nil, fmt.Errorf("expect {, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("expect {, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	p.forward() // 跳过 {
 
@@ -599,7 +707,7 @@ func (p *Parser) parseBlockStatement() ([]ast.Statement, error) {
 	}
 
 	if !p.expectToken(token.RBRACE) {
-		return nil, fmt.Errorf("expect }, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("expect }, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	return res, nil
 }
@@ -607,22 +715,22 @@ func (p *Parser) parseBlockStatement() ([]ast.Statement, error) {
 func (p *Parser) parseStructLiteral() (ast.Expression, error) {
 	p.forward() // 跳过 struct
 	if !p.expectToken(token.IDENTIFIER) {
-		return nil, fmt.Errorf("expect identifier, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("expect identifier, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 
-	stu := &ast.StructLiteral{Name: p.currentToken.Value}
+	res := &ast.StructLiteral{Name: p.currentToken.Value, Methods: make(map[string]*ast.FnLiteral)}
 	p.forward() // 跳过 identifier
 
 	if !p.expectToken(token.LBRACE) {
-		return nil, fmt.Errorf("expect {, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("expect {, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 	}
 	p.forward() // 跳过 {
 
 	for !p.expectToken(token.RBRACE) {
 		if !p.expectToken(token.IDENTIFIER) {
-			return nil, fmt.Errorf("expect identifier, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
+			return nil, fmt.Errorf("expect identifier, but got %s on line %d, col: %d", p.currentToken, p.currentToken.Row, p.currentToken.Col)
 		}
-		stu.Fields = append(stu.Fields, p.currentToken.Value)
+		res.Fields = append(res.Fields, p.currentToken.Value)
 		p.forward() // 跳过 identifier
 
 		if p.expectToken(token.COMMA) {
@@ -633,7 +741,7 @@ func (p *Parser) parseStructLiteral() (ast.Expression, error) {
 	if !p.expectToken(token.RBRACE) {
 		return nil, fmt.Errorf("expect }, but got %s on line %d, col: %d", p.currentToken.String(), p.currentToken.Row, p.currentToken.Col)
 	}
-	return stu, nil
+	return res, nil
 }
 
 /*
@@ -1073,7 +1181,7 @@ func (p *Parser) parseNotEqual(left ast.Expression) (ast.Expression, error) {
 func (p *Parser) parseStructInstantiate(left ast.Expression) (ast.Expression, error) {
 	_, ok := left.(*ast.Ident)
 	if !ok {
-		return nil, fmt.Errorf("not ident on line %d, col: %d", p.currentToken.Row, p.currentToken.Col)
+		return nil, fmt.Errorf("TypeError: not ident on line %d, col: %d", p.currentToken.Row, p.currentToken.Col)
 	}
 
 	p.forward() // 跳过 {

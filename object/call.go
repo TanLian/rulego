@@ -41,25 +41,6 @@ a.Push(4);
 6. 注入的结构体的方法 InjectMethod
 */
 
-type StructCall struct {
-	Self   Object
-	Method Caller
-}
-
-func (fn *StructCall) object() {}
-
-func (fn *StructCall) Type() Type {
-	return TypeCall
-}
-
-func (fn *StructCall) GetValue() any {
-	return Null
-}
-
-func (fn *StructCall) Call(args []Object) Object {
-	return fn.Method.Call(args)
-}
-
 type InjectStructCall struct {
 	MethodName string
 	Struct     *InjectStruct

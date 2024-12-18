@@ -25,13 +25,15 @@ func (c *Call) Eval(env *environment.Environment) object.Object {
 	}
 
 	leftObj := c.Left.Eval(env)
-	if leftObj == nil || leftObj.Type() == object.TypeUndefined {
-		return object.Null
+	//fmt.Println("leftObj: ", leftObj.Type(), " ", leftObj.GetValue())
+	// 自定义的函数
+	if fn, ok := leftObj.(*FnLiteral); ok {
+		return fn.Call(inObj)
 	}
 
-	// 自定义的函数
-	if fn, ok := leftObj.(*object.LiteralFn); ok {
-		return fn.Call(inObj)
+	// 闭包
+	if closure, ok := leftObj.(*Closure); ok {
+		return closure.Call(inObj)
 	}
 
 	// 注入的函数
@@ -40,10 +42,7 @@ func (c *Call) Eval(env *environment.Environment) object.Object {
 	}
 
 	// 调用内部结构体（原生支持的结构体）的函数
-	if callObj, ok := leftObj.(*object.StructCall); ok {
-		if callObj.Self != nil && callObj.Self != object.Null {
-			inObj = append([]object.Object{callObj.Self}, inObj...)
-		}
+	if callObj, ok := leftObj.(*StructCall); ok {
 		return callObj.Call(inObj)
 	}
 
@@ -58,7 +57,7 @@ func (c *Call) Eval(env *environment.Environment) object.Object {
 	}
 
 	// 内置函数
-	if builtInFn, ok := leftObj.(*object.BuiltinFn); ok {
+	if builtInFn, ok := leftObj.(*FnBuiltin); ok {
 		return builtInFn.Call(inObj)
 	}
 

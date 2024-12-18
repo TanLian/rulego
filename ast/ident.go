@@ -13,12 +13,14 @@ type Ident struct {
 }
 
 func (ie *Ident) Eval(env *environment.Environment) object.Object {
-	//fmt.Println("ident eval: ", ie.Token.Value, " env: ", env)
+	// fmt.Println("ident eval: ", ie.Token.Value, " env: ", env)
 	if obj, has := env.Get(ie.Token.Value); has {
 		return obj
 	}
-	if ie.Token.Value == "println" {
-		return &object.BuiltinFn{Name: ie.Token.Value}
+
+	// 内置函数
+	if fn, ok := BuiltInFn[ie.Token.Value]; ok {
+		return fn
 	}
 	panic(fmt.Sprintf("NameError: name '%s' is not defined", ie.Token.Value))
 }

@@ -65,6 +65,7 @@ const (
 	BANG        // !
 
 	INLINE_COMMENTS
+	LAMBDA
 
 	// end of file
 	EOF
@@ -126,6 +127,7 @@ func (t Token) String() string {
 		LOGIC_AND:       "&&",
 		LOGIC_OR:        "||",
 		INLINE_COMMENTS: "//",
+		LAMBDA:          "lambda",
 		EOF:             "eof",
 	}
 	return fmt.Sprintf("(%s,%s)", m[t.Type], t.Value)
@@ -153,5 +155,6 @@ var (
 		"default":  DEFAULT,
 		"struct":   STRUCT,
 		"impl":     IMPL,
+		"lambda":   LAMBDA,
 	}
 )

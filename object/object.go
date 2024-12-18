@@ -22,6 +22,7 @@ const (
 	TypeRgStruct
 	TypeFnLiteral
 	TypeCall
+	TypeClosure
 )
 
 var typeNames = map[Type]string{
@@ -39,6 +40,7 @@ var typeNames = map[Type]string{
 	TypeRgStruct:   "struct",
 	TypeFnLiteral:  "fn",
 	TypeCall:       "call",
+	TypeClosure:    "closure",
 }
 
 func (t Type) String() string {

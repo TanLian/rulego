@@ -1,5 +1,7 @@
 # RuleGo
 
+![img](https://github.com/TanLian/rulego/blob/main/imgs/Dec-18-2024%2014-55-19.gif)
+
 RuleGo 是一个项目，包含两个主要部分：
 1. 一个简洁优雅的脚本语言（RuleScript）
 2. 一个强大的规则引擎系统（RuleEngine）

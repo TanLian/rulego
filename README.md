@@ -22,7 +22,7 @@ rulego/
 
 ```
 
-## 第一部分：RuleScript 脚本语言
+## RuleScript 脚本语言
 
 RuleScript 是一个简单但功能强大的脚本语言，语法借鉴了 Go 和 JavaScript 的优点。
 
@@ -107,7 +107,7 @@ assert_eq(p1.get_name(), "leo");
 - 丰富的内置函数 TODO
 - 完整的错误处理 TODO
 
-## 第二部分：RuleEngine 规则引擎
+## RuleEngine 规则引擎
 
 RuleEngine 是一个基于 RuleScript 的规则引擎系统，用于定义和执行业务规则。
 
